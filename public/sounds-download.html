@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Sound Effects Download</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+        }
+        h1 { text-align: center; margin: 20px 0; color: #e94560; }
+        .download-all {
+            text-align: center;
+            margin: 20px 0 30px;
+        }
+        .download-all a {
+            display: inline-block;
+            background: #e94560;
+            color: #fff;
+            padding: 15px 40px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .download-all a:hover { background: #c73650; }
+        .download-all span { display: block; margin-top: 8px; color: #888; font-size: 14px; }
+        .category { margin: 25px 0 10px; color: #e94560; font-size: 20px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .sound-card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #0f3460;
+        }
+        .sound-card:hover { border-color: #e94560; }
+        .sound-info { flex: 1; }
+        .sound-name { font-weight: bold; font-size: 14px; }
+        .sound-desc { color: #888; font-size: 12px; margin-top: 2px; }
+        audio { width: 180px; height: 32px; }
+        .dl-btn {
+            background: #0f3460;
+            color: #eee;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .dl-btn:hover { background: #1a4a7a; }
+        .count { text-align: center; color: #888; margin: 10px 0 20px; }
+    </style>
+</head>
+<body>
+    <h1>Game Sound Effects</h1>
+    <p class="count">Total: 46 sound effects</p>
+
+    <div class="download-all">
+        <a href="/assets/sounds/all_sounds.zip" download>ZIP Download (All 46 Sounds)</a>
+        <span>all_sounds.zip (416 KB)</span>
+    </div>
+
+    <h2 class="category">Combat</h2>
+    <div class="grid" id="combat"></div>
+
+    <h2 class="category">Magic / Spells</h2>
+    <div class="grid" id="magic"></div>
+
+    <h2 class="category">Game Events</h2>
+    <div class="grid" id="events"></div>
+
+    <h2 class="category">Items / Shop</h2>
+    <div class="grid" id="items"></div>
+
+    <h2 class="category">UI</h2>
+    <div class="grid" id="ui"></div>
+
+    <h2 class="category">Environment / Social</h2>
+    <div class="grid" id="env"></div>
+
+    <script>
+        const sounds = {
+            combat: [
+                { file: "attack", desc: "Attack - punch impact" },
+                { file: "hit", desc: "Damage received" },
+                { file: "critical", desc: "Critical hit!" },
+                { file: "sword_swing", desc: "Knight sword whoosh" },
+                { file: "arrow_shoot", desc: "Elf bow + arrow" },
+                { file: "block", desc: "Shield block clang" },
+                { file: "dodge", desc: "Dodge whoosh" },
+                { file: "miss", desc: "Attack missed" },
+                { file: "death", desc: "Player death" },
+                { file: "monster_death", desc: "Monster death" },
+                { file: "enemy_spotted", desc: "Enemy aggro alert" },
+                { file: "poison", desc: "Poison damage tick" },
+            ],
+            magic: [
+                { file: "magic_spill", desc: "Magic cast explosion" },
+                { file: "skill_cast", desc: "Skill charge + release" },
+                { file: "fire_spell", desc: "Fire spell (crackling)" },
+                { file: "ice_spell", desc: "Ice spell (shatter)" },
+                { file: "lightning_spell", desc: "Lightning bolt (zap)" },
+                { file: "enchant_success", desc: "Enchant success sparkle" },
+                { file: "enchant_fail", desc: "Enchant fail descend" },
+            ],
+            events: [
+                { file: "level_up", desc: "Level up fanfare" },
+                { file: "quest_complete", desc: "Quest complete triumph" },
+                { file: "resurrect", desc: "Resurrection heavenly" },
+                { file: "teleport", desc: "Teleport warp" },
+                { file: "portal_open", desc: "Portal opening hum" },
+                { file: "learn_skill", desc: "Skill book learned" },
+                { file: "heal", desc: "Healing effect" },
+                { file: "buff_activate", desc: "Buff power-up" },
+                { file: "warning", desc: "Warning beeps" },
+            ],
+            items: [
+                { file: "coin", desc: "Purchase coin clink" },
+                { file: "sell_item", desc: "Sell cha-ching" },
+                { file: "item_pickup", desc: "Item acquired" },
+                { file: "gold_drop", desc: "Gold coins dropping" },
+                { file: "equip", desc: "Equipment clank" },
+                { file: "inventory_move", desc: "Inventory drag" },
+                { file: "potion_drink", desc: "Potion gulp" },
+                { file: "chest_open", desc: "Chest opening creak" },
+            ],
+            ui: [
+                { file: "ui_click", desc: "Button click" },
+                { file: "ui_open", desc: "Window open" },
+                { file: "ui_close", desc: "Window close" },
+                { file: "ui_error", desc: "Error buzzer" },
+                { file: "chat_message", desc: "Chat notification" },
+            ],
+            env: [
+                { file: "door_open", desc: "Door opening" },
+                { file: "footstep", desc: "Footstep" },
+                { file: "ambient_wind", desc: "Wind ambience" },
+                { file: "party_join", desc: "Party joined chime" },
+                { file: "party_leave", desc: "Party left tone" },
+            ],
+        };
+
+        Object.entries(sounds).forEach(([category, list]) => {
+            const container = document.getElementById(category);
+            list.forEach(s => {
+                const card = document.createElement("div");
+                card.className = "sound-card";
+                card.innerHTML = `
+                    <div class="sound-info">
+                        <div class="sound-name">${s.file}.mp3</div>
+                        <div class="sound-desc">${s.desc}</div>
+                    </div>
+                    <audio controls preload="none" src="/assets/sounds/${s.file}.mp3"></audio>
+                    <a class="dl-btn" href="/assets/sounds/${s.file}.mp3" download="${s.file}.mp3">DL</a>
+                `;
+                container.appendChild(card);
+            });
+        });
+    </script>
+</body>
+</html>
