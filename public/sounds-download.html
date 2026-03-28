@@ -67,11 +67,11 @@
 </head>
 <body>
     <h1>Game Sound Effects</h1>
-    <p class="count">Total: 50 sound effects</p>
+    <p class="count">Total: 70 sound effects</p>
 
     <div class="download-all">
-        <a href="/assets/sounds/all_sounds.zip" download>ZIP Download (All 50 Sounds)</a>
-        <span>all_sounds.zip (480 KB)</span>
+        <a href="/assets/sounds/all_sounds.zip" download>ZIP Download (All 70 Sounds)</a>
+        <span>all_sounds.zip (612 KB)</span>
     </div>
 
     <h2 class="category">Combat</h2>
@@ -91,6 +91,9 @@
 
     <h2 class="category">Environment / Social</h2>
     <div class="grid" id="env"></div>
+
+    <h2 class="category" style="color: #ffd700;">Lineage Classic Style</h2>
+    <div class="grid" id="lineage"></div>
 
     <script>
         const sounds = {
@@ -155,6 +158,28 @@
                 { file: "ambient_wind", desc: "Wind ambience" },
                 { file: "party_join", desc: "Party joined chime" },
                 { file: "party_leave", desc: "Party left tone" },
+            ],
+            lineage: [
+                { file: "lc_sword_slash", desc: "검 슬래시 - 챙!" },
+                { file: "lc_dagger_stab", desc: "단검 찌르기 - 칙!" },
+                { file: "lc_melee_hit", desc: "근접 타격 - 퍽!" },
+                { file: "lc_bow_release", desc: "활 발사 - 팅!" },
+                { file: "lc_arrow_impact", desc: "화살 적중 - 탁!" },
+                { file: "lc_shield_block", desc: "방패 방어 - 땡!" },
+                { file: "lc_critical_hit", desc: "크리티컬 - 챠앙!!" },
+                { file: "lc_damage_taken", desc: "피격 데미지 - 윽!" },
+                { file: "lc_spell_casting", desc: "마법 시전 - 슈우웅~" },
+                { file: "lc_fire_impact", desc: "화염 적중 - 펑!" },
+                { file: "lc_lightning_zap", desc: "번개 타격 - 지지직!" },
+                { file: "lc_heal_spell", desc: "힐 마법 - 띠링~" },
+                { file: "lc_teleport", desc: "순간이동 - 슈웅퐁!" },
+                { file: "lc_monster_die", desc: "몬스터 처치 - 퍽슈우" },
+                { file: "lc_item_drop", desc: "아이템 드롭 - 딸깍" },
+                { file: "lc_item_get", desc: "아이템 획득 - 띠링!" },
+                { file: "lc_level_up", desc: "레벨업 - 빠빠빠빵~!" },
+                { file: "lc_enchant_try", desc: "인챈트 시도 - 두근두근" },
+                { file: "lc_enchant_ok", desc: "인챈트 성공 - 삐융빵!" },
+                { file: "lc_enchant_break", desc: "인챈트 파괴 - 삐잇쿵" },
             ],
         };
 
