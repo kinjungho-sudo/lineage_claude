@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-gray-200 font-sans;
+    /* Prevent selection for game-like feel */
+    user-select: none;
+  }
+}
+
+/* Retro Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-left: 1px solid #333;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border: 1px solid #666;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
+}
+
+/* Tooltip or popover aesthetics */
+.retro-border {
+  border: 2px solid #6d6d6d;
+  box-shadow:
+    inset 1px 1px 0 #000,
+    inset -1px -1px 0 #000,
+    1px 1px 0 #000;
+}
+
+.lineage-panel {
+  background-color: #1a1a1a;
+  border: 1px solid #3f3f3f;
+  box-shadow: 0 0 0 1px #000 inset;
+}
+
+.lineage-button {
+  background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.lineage-button:active {
+  background: #222;
+  box-shadow: inset 1px 1px 3px #000;
+}
+
+.retro-window {
+  border: 1px solid #3f3f3f;
+  box-shadow:
+    0 0 0 1px #000,
+    0 10px 20px rgba(0, 0, 0, 0.5);
+  background: #1a1a1a;
+}
+
+/* Chat Log Styling */
+.chat-log {
+  font-family: 'Dotum', 'Gulim', sans-serif;
+  text-shadow: 1px 1px 0 #000;
+  scrollbar-width: none;
+  /* Hide scrollbar for cleaner look if requested, or keep retro */
+}
+
+.chat-log::-webkit-scrollbar {
+  display: none;
+}
+
+/* Base Font */
+body {
+  font-family: 'Gulim', 'Dotum', sans-serif;
+}
+
+/* Animations (Phase 3) */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+
+@keyframes progressShrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.animate-progress-shrink {
+  animation: progressShrink 2.5s linear forwards;
+}

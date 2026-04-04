@@ -7,11 +7,15 @@ class SoundManager {
     constructor() {
         this.sounds = {};
         this.muted = false;
+        this.volume = 0.8;
     }
 
-    // Preload commonly used sounds if needed (optional for now)
-    preload() {
-        // defined but not strictly enforcing buffer loading
+    setEnabled(enabled) {
+        this.muted = !enabled;
+    }
+
+    setVolume(volume) {
+        this.volume = volume;
     }
 
     playSound(soundName) {
@@ -19,17 +23,12 @@ class SoundManager {
 
         try {
             const audio = new Audio(`/assets/sounds/${soundName}.mp3`);
-            audio.volume = 0.5;
-            audio.play().catch(e => {
-                // Ignore errors (e.g., file not found or interaction required)
-                // console.warn(`Sound ${soundName} failed to play:`, e);
-            });
+            audio.volume = this.volume;
+            audio.play().catch(() => {});
         } catch (e) {
             console.error(e);
         }
     }
-
-    // Play with slight random pitch for variety? (Advanced, skip for now)
 }
 
 export const soundManager = new SoundManager();

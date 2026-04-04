@@ -3,14 +3,16 @@ import { ITEMS } from '../data/items';
 import { MONSTERS, MAPS } from '../data/monsters';
 import { SPELLS } from '../data/spells';
 import { ITEM_TYPES, SCROLL_TYPES, ENCHANT_RESULTS } from '../constants';
-import { GAME_ACTIONS, calculateStats, gameReducer, INITIAL_STATE } from './GameReducer';
+import { GAME_ACTIONS, INITIAL_STATE } from '../constants';
+import { calculateStats } from '../mechanics/combat';
+import { gameReducer } from '../reducers';
 
 // Custom Hooks
 import { useGameSession } from '../hooks/useGameSession';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useSessionCheck } from '../hooks/useSessionCheck';
-import { supabase } from '../lib/supabase'; // [FIX] 누락된 임포트 추가
+import { useTrade } from '../hooks/useTrade';
 
 const GameContext = createContext();
 
@@ -21,7 +23,7 @@ export const GameProvider = ({ children }) => {
     // 2. Session Management Hook (User, Login, Signup, Logout, Save/Load)
     const {
         user, setUser, isLoading, isSaving,
-        loginUser, signupUser, logout, saveData
+        loginUser, signupUser, forgotPassword, resetPasswordDirect, changePassword, logout, saveData
     } = useGameSession(dispatch, state);
 
     // 3. Auto-Save Hook (Re-enabled due to user request - Character Creation Save)
@@ -34,6 +36,12 @@ export const GameProvider = ({ children }) => {
 
     // 5. Session Check Hook (Duplicate Login Prevention)
     useSessionCheck(user, logout, isLoading);
+
+    // 6. Trade Hook
+    const {
+        tradeState, incomingRequest,
+        sendTradeRequest, acceptTrade, declineTrade, cancelTrade, updateMyOffer, confirmTrade,
+    } = useTrade(state, dispatch);
 
     // 6. Action Handlers (Wrappers for Dispatch)
     // 인벤토리/전투 관련 액션은 여기서 간단히 래핑하거나, 컴포넌트에서 직접 dispatch 해도 됨.
@@ -53,33 +61,35 @@ export const GameProvider = ({ children }) => {
     };
     // [개선] 사망 후 부활 버튼 처리
     const resurrect = () => dispatch({ type: GAME_ACTIONS.RESURRECT });
+    const rejoinCombat = () => dispatch({ type: GAME_ACTIONS.REJOIN_COMBAT });
     // [스탯 시스템] 50레벨 이후 STR/CON 배분
     const allocateStat = (statType) => dispatch({ type: GAME_ACTIONS.ALLOCATE_STAT, payload: statType });
 
     // [개선] 캐릭터 선택창으로 나가기 전 저장 강제 수행
     const logoutToSelect = async () => {
         if (!user) return;
-        setIsSaving(true);
-        try {
-            await saveData(user.id, state);
-            dispatch({ type: GAME_ACTIONS.LOGOUT_CHARACTER });
-        } finally {
-            setIsSaving(false);
-        }
+        await saveData(user.id, state);
+        dispatch({ type: GAME_ACTIONS.LOGOUT_CHARACTER });
     };
 
     // Helper
     const calculateAc = () => calculateStats(state).ac;
 
+    // [파티] 선택된 파티원 (버프 시전 타겟)
+    const [selectedPartyTarget, setSelectedPartyTarget] = useState(null);
+
     return (
         <GameContext.Provider value={{
-            state, dispatch, user, setUser, loginUser, signupUser, logout, logoutToSelect, isLoading, isSaving,
-            buyItems, useScroll, usePotion, equipItem, unequipItem, moveItem, calculateAc, teleport, sellItem, resurrect, allocateStat,
-            saveData, MONSTERS, MAPS, ITEMS, SPELLS, ITEM_TYPES, SCROLL_TYPES, ENCHANT_RESULTS
+            state, dispatch, user, setUser, loginUser, signupUser, forgotPassword, resetPasswordDirect, changePassword, logout, logoutToSelect, isLoading, isSaving,
+            buyItems, useScroll, usePotion, equipItem, unequipItem, moveItem, calculateAc, teleport, sellItem, resurrect, rejoinCombat, allocateStat,
+            saveData, MONSTERS, MAPS, ITEMS, SPELLS, ITEM_TYPES, SCROLL_TYPES, ENCHANT_RESULTS,
+            tradeState, incomingRequest, sendTradeRequest, acceptTrade, declineTrade, cancelTrade, updateMyOffer, confirmTrade,
+            selectedPartyTarget, setSelectedPartyTarget,
         }}>
             {children}
         </GameContext.Provider>
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useGame = () => useContext(GameContext);

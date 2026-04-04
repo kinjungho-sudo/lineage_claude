@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { GAME_ACTIONS, INITIAL_STATE, GAME_VERSION } from '../context/GameReducer';
 import { MAPS } from '../data/monsters';
@@ -46,7 +46,8 @@ export const useGameSession = (dispatch, state) => {
             if (charIdx >= 0) {
                 // [PRUNE] Keep only the essential character data
                 const {
-                    allCharacters, logs, combatLogs, combatState,
+                    allCharacters: _allChars, logs, combatLogs, combatState: _combatState,
+                    sharedWarehouse: _shared,
                     ...essentialCharacterState
                 } = gameState;
 
@@ -62,7 +63,8 @@ export const useGameSession = (dispatch, state) => {
         const dataToSave = {
             ...gameState,
             allCharacters: updatedChars,
-            sessionId: user?.sessionId || gameState.sessionId || ''
+            sessionId: user?.sessionId || gameState.sessionId || '',
+            lastSeen: Date.now()
         };
 
         try {
@@ -77,11 +79,14 @@ export const useGameSession = (dispatch, state) => {
                     .eq('id', userId)
                     .single();
 
-                if (!checkError && dbRow?.game_data) {
+                if (!checkError && dbRow?.game_data && gameState.isCharacterSelected) {
                     const dbData = dbRow.game_data;
-                    // [안전장치] 만약 서버의 레벨이 로컬보다 높다면 덮어쓰지 않음 (의도적인 초기화 제외)
-                    if (dataToSave.level < dbData.level && dbData.level > 1 && !gameState.forceReset) {
-                        console.error(`[Save Blocked] Level Downgrade! Local:${dataToSave.level}, DB:${dbData.level}`);
+                    // [안전장치] 캐릭터 플레이 중일 때만 레벨 다운 방지 체크
+                    // DB의 같은 캐릭터 레벨과 비교
+                    const dbChar = dbData.allCharacters?.find(c => c.id === gameState.id);
+                    const dbLevel = dbChar ? dbChar.level : dbData.level;
+                    if (dataToSave.level < dbLevel && dbLevel > 1 && !gameState.forceReset) {
+                        console.error(`[Save Blocked] Level Downgrade! Local:${dataToSave.level}, DB:${dbLevel}`);
                         setIsSaving(false);
                         return;
                     }
@@ -105,87 +110,6 @@ export const useGameSession = (dispatch, state) => {
             setTimeout(() => setIsSaving(false), 500);
         }
     };
-
-    /**
-     * 데이터 로드 (Load Data - Indestructible Version)
-     */
-    const loadData = async (userId, newSessionId) => {
-        setIsLoading(true);
-        console.log(`[Load System] Starting data recovery for: ${userId}`);
-
-        try {
-            // Priority 1: Supabase Load
-            let dbData = null;
-            if (!supabase.isOffline) {
-                const { data, error: fetchError } = await supabase
-                    .from('users')
-                    .select('game_data')
-                    .eq('id', userId)
-                    .single();
-
-                if (!fetchError && data) {
-                    dbData = data.game_data;
-                }
-            }
-
-            // Priority 2: Local Storage Fallback
-            const localRaw = localStorage.getItem(`lineage_save_${userId}`);
-            const localData = localRaw ? JSON.parse(localRaw) : null;
-
-            // Merge & Decide target state
-            let targetState = null;
-
-            if (dbData && localData) {
-                targetState = (dbData.level >= localData.level) ? dbData : localData;
-            } else {
-                targetState = dbData || localData || INITIAL_STATE;
-            }
-
-            // [MIGRATION] Version Check
-            if (targetState.version !== GAME_VERSION) {
-                console.log(`[Load System] Migration Required: ${targetState.version} -> ${GAME_VERSION}`);
-                targetState = {
-                    ...INITIAL_STATE,
-                    ...targetState,
-                    version: GAME_VERSION,
-                    combatState: INITIAL_STATE.combatState
-                };
-            }
-
-            // [SESSION] Bind to new session
-            if (newSessionId) {
-                targetState.sessionId = newSessionId;
-            }
-
-            // [FINAL SAVE] Sync the recovered state back to DB/Local immediately
-            if (!supabase.isOffline && targetState.level > 0) {
-                try {
-                    console.log("[Load System] Attempting initial sync upgrade...");
-                    await supabase.from('users').update({ game_data: targetState }).eq('id', userId);
-                } catch (e) {
-                    console.warn("[Load System] Background sync skipped:", e.message);
-                }
-            }
-            localStorage.setItem(`lineage_save_${userId}`, JSON.stringify(targetState));
-
-            // [캐릭터 선택] 계정 전체 데이터 로드 후 CharacterSelect 화면 대기
-            dispatch({ type: GAME_ACTIONS.INITIALIZE_ACCOUNT, payload: targetState });
-            console.log(`[Load System] DONE. Characters Found: ${targetState.allCharacters?.length || 0}`);
-            if (targetState.allCharacters?.length > 0) {
-                targetState.allCharacters.forEach((c, idx) => {
-                    console.log(` - Slot ${idx+1}: ${c.characterName} (Lv.${c.level} ${c.characterClass})`);
-                });
-            }
-
-        } catch (err) {
-            console.error("[CRITICAL] Load System Failure:", err);
-            // Panic Fallback: If everything fails, use initial but don't save to DB
-            dispatch({ type: GAME_ACTIONS.SET_STATE, payload: INITIAL_STATE });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
 
     /**
      * 로그인 (Login)
@@ -269,7 +193,7 @@ export const useGameSession = (dispatch, state) => {
     /**
      * 회원가입 (Sign Up)
      */
-    const signupUser = async (userId, password, nickname) => {
+    const signupUser = async (userId, password, name, email) => {
         setIsLoading(true);
         const newSessionId = Date.now().toString();
         try {
@@ -281,10 +205,9 @@ export const useGameSession = (dispatch, state) => {
                 }
                 const newState = { ...INITIAL_STATE, sessionId: newSessionId };
                 localStorage.setItem(`lineage_save_${userId}`, JSON.stringify(newState));
-                localStorage.setItem(`lineage_nick_${userId}`, nickname);
-
+                localStorage.setItem(`lineage_nick_${userId}`, userId);
                 dispatch({ type: GAME_ACTIONS.SET_STATE, payload: newState });
-                setUser({ id: userId, nickname: nickname, sessionId: newSessionId });
+                setUser({ id: userId, nickname: userId, sessionId: newSessionId });
                 return;
             }
 
@@ -294,9 +217,9 @@ export const useGameSession = (dispatch, state) => {
                 return;
             }
 
-            const { data: existingNick } = await supabase.from('users').select('nickname').eq('nickname', nickname).single();
-            if (existingNick) {
-                alert('이미 존재하는 캐릭터 이름입니다.');
+            const { data: existingEmail } = await supabase.from('users').select('email').eq('email', email).single();
+            if (existingEmail) {
+                alert('이미 사용 중인 이메일입니다.');
                 return;
             }
 
@@ -304,21 +227,110 @@ export const useGameSession = (dispatch, state) => {
 
             const { error } = await supabase.from('users').insert([{
                 id: userId,
-                nickname: nickname,
+                nickname: userId,
+                name,
+                email,
                 game_data: newState,
                 password
             }]);
 
             if (error) throw error;
 
-            // [캐릭터 선택] 신규 계정 생성 시 빈 캐릭터 목록 초기화
             dispatch({ type: GAME_ACTIONS.INITIALIZE_ACCOUNT, payload: newState });
-            setUser({ id: userId, nickname: nickname, sessionId: newSessionId });
-            alert('계정이 생성되었습니다. 게임을 시작합니다.');
+            setUser({ id: userId, nickname: userId, sessionId: newSessionId });
+            alert('계정이 생성되었습니다. 캐릭터를 생성해주세요.');
 
         } catch (e) {
             console.error(e);
             alert('계정 생성 중 오류가 발생했습니다: ' + e.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // 1단계: 아이디+이메일 일치 확인
+    const forgotPassword = async (userId, email) => {
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('id, email')
+                .eq('id', userId)
+                .single();
+
+            if (error || !data) {
+                alert('존재하지 않는 계정입니다.');
+                return false;
+            }
+            if (data.email !== email) {
+                alert('이메일 주소가 일치하지 않습니다.');
+                return false;
+            }
+            return true;
+        } catch (e) {
+            console.error('[forgotPassword 오류]', e);
+            alert('오류가 발생했습니다.');
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // 2단계: 새 비밀번호로 실제 변경
+    const resetPasswordDirect = async (userId, newPassword) => {
+        setIsLoading(true);
+        try {
+            const { error } = await supabase
+                .from('users')
+                .update({ password: newPassword })
+                .eq('id', userId);
+            if (error) throw error;
+            alert('비밀번호가 변경되었습니다. 새 비밀번호로 로그인하세요.');
+            return true;
+        } catch (e) {
+            console.error('[resetPassword 오류]', e);
+            alert('비밀번호 변경 중 오류가 발생했습니다.');
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const changePassword = async (userId, currentPassword, newPassword) => {
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('password')
+                .eq('id', userId)
+                .single();
+
+            if (error || !data) {
+                alert('계정 정보를 불러올 수 없습니다.');
+                return false;
+            }
+            if (data.password !== currentPassword) {
+                alert('현재 비밀번호가 일치하지 않습니다.');
+                return false;
+            }
+            if (newPassword.length < 8) {
+                alert('새 비밀번호는 최소 8자 이상이어야 합니다.');
+                return false;
+            }
+
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ password: newPassword })
+                .eq('id', userId);
+
+            if (updateError) throw updateError;
+
+            alert('비밀번호가 변경되었습니다.');
+            return true;
+        } catch (e) {
+            console.error(e);
+            alert('오류가 발생했습니다: ' + e.message);
+            return false;
         } finally {
             setIsLoading(false);
         }
@@ -348,7 +360,10 @@ export const useGameSession = (dispatch, state) => {
         isSaving,
         loginUser,
         signupUser,
+        forgotPassword,
+        resetPasswordDirect,
+        changePassword,
         logout,
-        saveData // Auto-save 등에서 사용하기 위해 노출
+        saveData
     };
 };

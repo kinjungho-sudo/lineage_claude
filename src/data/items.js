@@ -1,44 +1,69 @@
 import { ITEM_TYPES, SCROLL_TYPES } from '../constants';
+// Note: CRYSTAL = 'crystal' (ITEM_TYPES.CRYSTAL)
 
 export const ITEMS = [
-    // --- Core Shop Items (Scrolls) ---
+    // --- Weapons (말하는 섬 이상) ---
     {
-        id: 'scroll_zel',
-        name: '갑옷 마법 주문서',
-        type: ITEM_TYPES.SCROLL,
-        scrollType: SCROLL_TYPES.ARMOR_SCROLL,
-        price: 30000,
-        image: '/assets/scroll_zel.png',
-    },
-    {
-        id: 'scroll_dai',
-        name: '무기 마법 주문서',
-        type: ITEM_TYPES.SCROLL,
-        scrollType: SCROLL_TYPES.WEAPON_SCROLL,
-        price: 50000,
-        image: '/assets/scroll_dai.png',
-    },
-    {
-        id: 'potion_brave',
-        name: '용기의 물약',
-        type: ITEM_TYPES.POTION,
-        price: 10000,
-        image: '/assets/potion_brave.png',
-        buffData: { type: 'brave', durationMs: 300000 },
+        id: 'sword_long',
+        name: '장검',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 4000,
+        image: '/assets/장검.png',
+        safe: 4,
+        stats: { small: 9, large: 11 },
         restrictedClasses: ['elf']
     },
     {
-        id: 'elven_wafer',
-        name: '엘븐 와퍼',
-        type: ITEM_TYPES.POTION,
-        price: 10000,
-        image: '/assets/elven_wafer.png',
-        description: '요정 전용 가속 아이템 (공속 향상)',
-        buffData: { type: 'brave', durationMs: 300000 },
+        id: 'sword_dwarf',
+        name: '난쟁이족 검',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 3000,
+        image: '/assets/난쟁이족 검.png',
+        safe: 4,
+        stats: { small: 9, large: 9 },
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'bow_orc',
+        name: '오크족 활',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 3000,
+        image: '/assets/오크족 활.png',
+        safe: 4,
+        twoHanded: true,
+        stats: { small: 10, large: 10, range: true },
         restrictedClasses: ['knight']
     },
+    {
+        id: 'sword_twohanded',
+        name: '양손검',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 5000,
+        image: '/assets/양손검.png',
+        safe: 4,
+        twoHanded: true,
+        description: '양손 무기 / 방패 착용 불가',
+        stats: { small: 14, large: 16 },
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'sword_silver',
+        name: '은장검',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 10000,
+        image: '/assets/은장검.png',
+        safe: 4,
+        description: '언데드 추가 공격력 +1',
+        stats: { small: 10, large: 11, undead: true },
+        restrictedClasses: ['elf']
+    },
 
-    // --- Weapons ---
+    // --- Weapons (고급) ---
     {
         id: 'sword_katana',
         name: '일본도',
@@ -59,7 +84,7 @@ export const ITEMS = [
         image: '/assets/crossbow.png',
         safe: 6,
         twoHanded: true,
-        stats: { small: 3, large: 2, range: true },
+        stats: { small: 14, large: 12, range: true, hit: 1 },
         restrictedClasses: ['knight']
     },
     {
@@ -79,11 +104,26 @@ export const ITEMS = [
         type: ITEM_TYPES.WEAPON,
         slot: 'weapon',
         price: 50000,
-        image: '/assets/longbow.png',
+        image: '/assets/장궁.png',
         safe: 6,
         unbuyable: true,
         twoHanded: true,
-        stats: { small: 3, large: 3, range: true }
+        stats: { small: 14, large: 14, range: true },
+        restrictedClasses: ['knight']
+    },
+    {
+        id: 'bow_saha',
+        name: '사하의 활',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 120000,
+        image: '/assets/사하의 활.png',
+        safe: 6,
+        unbuyable: true,
+        twoHanded: true,
+        description: '명중률 +1',
+        stats: { small: 20, large: 18, range: true, hit: 1 },
+        restrictedClasses: ['knight']
     },
     {
         id: 'sword_ssaulabi',
@@ -98,7 +138,148 @@ export const ITEMS = [
         restrictedClasses: ['elf']
     },
 
-    // --- Armor ---
+    // --- Weapons (마법사 전용) ---
+    {
+        id: 'staff_wizard',
+        name: '마법사의 지팡이',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 5000,
+        image: '/assets/마법사의 지팡이.png',
+        safe: 6,
+        isStaff: true,
+        description: '마법 공격력 +1 / 마법사 전용',
+        stats: { small: 4, large: 5, magicAtkBonus: 1 },
+        restrictedClasses: ['knight', 'elf']
+    },
+
+    // --- Armor (마법사 전용 / 천·가죽 계열) ---
+    {
+        id: 'helm_wizard',
+        name: '마법사 모자',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'helm',
+        price: 3000,
+        image: '/assets/마법사 모자.png',
+        safe: 4,
+        description: 'AC -2 / 최대 MP +50 / 마법사 전용',
+        stats: { ac: 2, mp: 50 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'armor_robe_plain',
+        name: '무명 로브',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 3000,
+        image: '/assets/무명로브.png',
+        safe: 4,
+        description: 'AC -5 / MR +10 / MP 회복 +5 / 마법사 전용',
+        stats: { ac: 5, mr: 10, mpRegen: 5 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'gloves_protection',
+        name: '보호 장갑',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'gloves',
+        price: 2000,
+        image: '/assets/보호 장갑.png',
+        safe: 4,
+        description: 'AC -2',
+        stats: { ac: 2 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'armor_robe_elder',
+        name: '흑장로의 로브',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 80000,
+        image: '/assets/wizard_robe.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -5 / INT +2 / WIS +1 / 마법사 전용',
+        stats: { ac: 5, int: 2, wis: 1 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'boots_elder',
+        name: '흑장로의 샌들',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'boots',
+        price: 40000,
+        image: '/assets/wizard_hat.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -2 / WIS +1 / 마법사 전용',
+        stats: { ac: 2, wis: 1 },
+        restrictedClasses: ['knight', 'elf']
+    },
+
+    // --- Armor (글루디오 던전 이상) ---
+    {
+        id: 'armor_chain',
+        name: '미늘 갑옷',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 7000,
+        image: '/assets/미늘 갑옷.png',
+        safe: 4,
+        description: 'AC -5',
+        stats: { ac: 5 },
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'armor_bronze_plate',
+        name: '청동 판금 갑옷',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 7000,
+        image: '/assets/청동 판금 갑옷.png',
+        safe: 4,
+        description: 'AC -6',
+        stats: { ac: 6 },
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'armor_plate',
+        name: '판금 갑옷',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 12000,
+        image: '/assets/판금 갑옷.png',
+        safe: 4,
+        description: 'AC -7',
+        stats: { ac: 7 },
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'helm_elf',
+        name: '요정족 투구',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'helm',
+        price: 8000,
+        image: '/assets/요정족 가죽 투구.png',
+        safe: 6,
+        description: 'AC -2',
+        stats: { ac: 2 }
+    },
+
+    // --- Armor (오크 숲 이상) ---
+    {
+        id: 'shirt_elf',
+        name: '요정족 티셔츠',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'shirt',
+        price: 20000,
+        image: '/assets/요정족 티셔츠.png',
+        safe: 6,
+        unbuyable: true,
+        stats: { ac: 0 }
+    },
+
+    // --- Armor (고급) ---
     {
         id: 'helm_steel',
         name: '강철 면갑',
@@ -107,7 +288,9 @@ export const ITEMS = [
         price: 15000,
         image: '/assets/steel_helm.png',
         safe: 4,
-        stats: { ac: 3, set: 'steel' }
+        description: 'AC -3 / [세트] 강철 세트',
+        stats: { ac: 3, set: 'steel' },
+        restrictedClasses: ['elf']
     },
     {
         id: 'armor_steel',
@@ -117,7 +300,9 @@ export const ITEMS = [
         price: 35000,
         image: '/assets/steel_armor.png',
         safe: 4,
-        stats: { ac: 7, set: 'steel' }
+        description: 'AC -7 / [세트] 강철 세트',
+        stats: { ac: 7, set: 'steel' },
+        restrictedClasses: ['elf']
     },
     {
         id: 'gloves_steel',
@@ -127,6 +312,7 @@ export const ITEMS = [
         price: 12000,
         image: '/assets/steel_gloves.png',
         safe: 4,
+        description: 'AC -1 / [세트] 강철 세트',
         stats: { ac: 1, set: 'steel' }
     },
     {
@@ -137,7 +323,8 @@ export const ITEMS = [
         price: 12000,
         image: '/assets/steel_boots.png',
         safe: 4,
-        stats: { ac: 2, set: 'steel' }
+        description: 'AC -3 / [세트] 강철 세트',
+        stats: { ac: 3, set: 'steel' }
     },
     {
         id: 'shield_steel',
@@ -147,7 +334,9 @@ export const ITEMS = [
         price: 15000,
         image: '/assets/steel_shield.png',
         safe: 4,
-        stats: { ac: 3, set: 'steel' }
+        description: 'AC -3 / [세트] 강철 세트',
+        stats: { ac: 3, set: 'steel' },
+        restrictedClasses: ['elf']
     },
     {
         id: 't_shirt',
@@ -159,17 +348,18 @@ export const ITEMS = [
         safe: 4,
         stats: { ac: 0 }
     },
-    // Elf Items
+
+    // --- 요정족 방어구 (기사/요정 공용) ---
     {
         id: 'armor_elf_plate',
         name: '요정족 판금 갑옷',
         type: ITEM_TYPES.ARMOR,
         slot: 'armor',
         price: 20000,
-        image: '/assets/armor_elf_plate.png',
+        image: '/assets/요정족 판금 갑옷.png',
         safe: 6,
-        stats: { ac: 6 },
-        restrictedClasses: ['knight']
+        description: 'AC -6',
+        stats: { ac: 6 }
     },
     {
         id: 'cloak_elf',
@@ -177,11 +367,10 @@ export const ITEMS = [
         type: ITEM_TYPES.ARMOR,
         slot: 'cloak',
         price: 15000,
-        image: '/assets/cloak_elf.png',
-        safe: 4,
+        image: '/assets/요정족 망토.png',
+        safe: 6,
         description: 'AC -1 / DEX +1',
-        stats: { ac: 1, dex: 1 },
-        restrictedClasses: ['knight']
+        stats: { ac: 1, dex: 1 }
     },
     {
         id: 'helm_elm',
@@ -189,21 +378,305 @@ export const ITEMS = [
         type: ITEM_TYPES.ARMOR,
         slot: 'helm',
         price: 20000,
-        image: '/assets/helm_elm.png',
+        image: '/assets/엘름의 축복.png',
         safe: 6,
         description: 'AC -2 / DEX +1',
-        stats: { ac: 2, dex: 1 },
+        stats: { ac: 2, dex: 1 }
+    },
+
+    // --- 마법 방어 장비 ---
+    {
+        id: 'helm_magic_def',
+        name: '마법 방어 투구',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'helm',
+        price: 2000,
+        image: '/assets/마법 방어 투구.png',
+        safe: 4,
+        description: 'AC -2 / 마법 방어력 +10',
+        stats: { ac: 2, mr: 10 },
+        unbuyable: true
+    },
+    {
+        id: 'cloak_magic_def',
+        name: '마법 망토',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'cloak',
+        price: 500,
+        image: '/assets/마법망토.png',
+        safe: 4,
+        description: 'AC -1 / 마법 방어력 +10',
+        stats: { ac: 1, mr: 10 },
+        unbuyable: true
+    },
+    {
+        id: 'armor_magic_def_chain',
+        name: '마법 방어 사슬 갑옷',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 5000,
+        image: '/assets/마법 방어 사슬 갑옷.png',
+        safe: 4,
+        description: 'AC -6 / 마법 방어력 +10',
+        stats: { ac: 6, mr: 10 },
+        unbuyable: true,
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'helm_magic_str',
+        name: '마법의 투구(힘)',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'helm',
+        price: 12000,
+        image: '/assets/마법의 투구 힘.png',
+        safe: 4,
+        description: 'AC -2 / 인챈트 마이티 스킬 사용 가능 (STR +5, 1분)',
+        stats: { ac: 2 },
+        unbuyable: true,
+        restrictedClasses: ['elf'],
+        useData: {
+            skillName: '인챈트 마이티',
+            icon: '/assets/skill_enchant_mighty.png',
+            mpCost: 100,
+            durationMs: 60000,
+            type: 'magic_helm_str'
+        }
+    },
+    {
+        id: 'shield_eva',
+        name: '에바의 방패',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'shield',
+        price: 10000,
+        image: '/assets/에바의 방패.png',
+        safe: 4,
+        description: 'AC -2 / 마법 방어력 +10',
+        stats: { ac: 2, mr: 10 },
+        unbuyable: true,
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'cloak_protection',
+        name: '보호 망토',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'cloak',
+        price: 9000,
+        image: '/assets/cloak_of_protection.png',
+        safe: 4,
+        description: 'AC -3',
+        stats: { ac: 3 }
+    },
+
+    // --- 커츠 세트 (보스 드랍) ---
+    {
+        id: 'helm_kurz',
+        name: '커츠의 투구',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'helm',
+        price: 80000,
+        image: '/assets/helm_kurz.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -4 / [세트] 커츠 세트',
+        stats: { ac: 4, set: 'kurz' },
+    },
+    {
+        id: 'armor_kurz',
+        name: '커츠의 갑옷',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 150000,
+        image: '/assets/armor_kurz.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -9 / [세트] 커츠 세트',
+        stats: { ac: 9, set: 'kurz' },
+    },
+    {
+        id: 'gloves_kurz',
+        name: '커츠의 장갑',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'gloves',
+        price: 60000,
+        image: '/assets/gloves_kurz.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -3 / [세트] 커츠 세트',
+        stats: { ac: 3, set: 'kurz' }
+    },
+    {
+        id: 'boots_kurz',
+        name: '커츠의 부츠',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'boots',
+        price: 60000,
+        image: '/assets/boots_kurz.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -3 / [세트] 커츠 세트',
+        stats: { ac: 3, set: 'kurz' }
+    },
+
+    // --- Potions & Buffs ---
+    {
+        id: 'potion_red',
+        name: '빨간 물약',
+        type: ITEM_TYPES.POTION,
+        price: 100,
+        image: '/assets/new_redpotion.png',
+        healAmount: 60
+    },
+    {
+        id: 'potion_clear',
+        name: '주홍 물약',
+        type: ITEM_TYPES.POTION,
+        price: 500,
+        image: '/assets/new_orangepotion.png',
+        healAmount: 250
+    },
+    {
+        id: 'potion_clear_high',
+        name: '맑은 물약',
+        type: ITEM_TYPES.POTION,
+        price: 1000,
+        image: '/assets/potion_clear_high.png',
+        healAmount: 500
+    },
+    {
+        id: 'potion_green',
+        name: '초록 물약',
+        type: ITEM_TYPES.POTION,
+        price: 500,
+        image: '/assets/초록 물약.png',
+        description: '공격 속도 50% 향상 (5분)',
+        useData: { type: 'haste', durationMs: 300000 }
+    },
+    {
+        id: 'potion_brave',
+        name: '용기의 물약',
+        type: ITEM_TYPES.POTION,
+        price: 4000,
+        image: '/assets/potion_brave.png',
+        description: '공격력 강화 (5분) / 기사 전용',
+        buffData: { type: 'brave', durationMs: 300000 },
+        restrictedClasses: ['elf']
+    },
+    {
+        id: 'elven_wafer',
+        name: '엘븐 와퍼',
+        type: ITEM_TYPES.POTION,
+        price: 5000,
+        image: '/assets/엘븐 와퍼.png',
+        description: '요정 전용 가속 아이템 (공속 향상)',
+        buffData: { type: 'brave', durationMs: 300000 },
+        restrictedClasses: ['knight']
+    },
+    {
+        id: 'potion_mana',
+        name: '마나 회복 물약',
+        type: ITEM_TYPES.POTION,
+        price: 2000,
+        image: '/assets/마나 회복 물약.png',
+        description: '초당 MP +5 (5분간 지속)',
+        buffData: { type: 'mana_regen', durationMs: 300000 },
+    },
+    {
+        id: 'potion_blue',
+        name: '파란 물약',
+        type: ITEM_TYPES.POTION,
+        price: 3000,
+        image: '/assets/파란 물약.png',
+        description: '마법 공격력 +3 (5분) / 다른 물약과 중복 사용 가능',
+        buffData: { type: 'blue', durationMs: 300000, magicAtkAmount: 3 }
+    },
+
+    // --- Scrolls ---
+    {
+        id: 'scroll_zel',
+        name: '갑옷 마법 주문서',
+        type: ITEM_TYPES.SCROLL,
+        scrollType: SCROLL_TYPES.ARMOR_SCROLL,
+        price: 50000,
+        image: '/assets/scroll_zel.png',
+        description: '방어구 강화 주문서'
+    },
+    {
+        id: 'scroll_dai',
+        name: '무기 마법 주문서',
+        type: ITEM_TYPES.SCROLL,
+        scrollType: SCROLL_TYPES.WEAPON_SCROLL,
+        price: 70000,
+        image: '/assets/scroll_dai.png',
+        description: '무기 강화 주문서'
+    },
+    {
+        id: 'scroll_blessed_armor',
+        name: '축복받은 갑옷 마법 주문서',
+        type: ITEM_TYPES.SCROLL,
+        scrollType: SCROLL_TYPES.ARMOR_SCROLL,
+        isBlessed: true,
+        unbuyable: true,
+        price: 180000,
+        image: '/assets/축복받은 갑옷 마법 주문서.png',
+        description: '강화 실패 시 장비가 파괴되지 않으며, 성공 시 +1~3 추가 보너스'
+    },
+    {
+        id: 'scroll_blessed_weapon',
+        name: '축복받은 무기 마법 주문서',
+        type: ITEM_TYPES.SCROLL,
+        scrollType: SCROLL_TYPES.WEAPON_SCROLL,
+        isBlessed: true,
+        unbuyable: true,
+        price: 250000,
+        image: '/assets/축복받은 무기 마법 주문서.PNG',
+        description: '강화 실패 시 장비가 파괴되지 않으며, 성공 시 +1~3 추가 보너스'
+    },
+
+    // --- Accessories ---
+    {
+        id: 'bow_thimble',
+        name: '활 골무',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'gloves',
+        price: 10000,
+        image: '/assets/활 골무.png',
+        safe: 4,
+        description: '원거리 공격력 +1 / 명중률 +1',
+        stats: { atkBonus: 1, hit: 1 },
         restrictedClasses: ['knight']
     },
 
-    // --- Accessory ---
+    // --- Accessories (unbuyable) ---
+    {
+        id: 'necklace_wis',
+        name: '지식의 목걸이',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'necklace',
+        price: 50000,
+        image: '/assets/지식의 목걸이.png',
+        description: 'WIS +1',
+        stats: { wis: 1 },
+        unbuyable: true
+    },
+    {
+        id: 'necklace_int',
+        name: '지혜의 목걸이',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'necklace',
+        price: 50000,
+        image: '/assets/지혜의 목걸이.png',
+        description: 'INT +1',
+        stats: { int: 1 },
+        unbuyable: true
+    },
     {
         id: 'necklace_str',
         name: '완력의 목걸이',
         type: ITEM_TYPES.ACCESSORY,
         slot: 'necklace',
         price: 50000,
-        image: '/assets/오크투사의 목걸이.png',
+        image: '/assets/necklace_str.png',
+        description: 'STR +1',
         stats: { str: 1 },
         unbuyable: true
     },
@@ -213,28 +686,471 @@ export const ITEMS = [
         type: ITEM_TYPES.ACCESSORY,
         slot: 'necklace',
         price: 50000,
-        image: '/assets/오크투사의 목걸이.png',
+        image: '/assets/necklace_str.png',
+        description: 'CON +1',
         stats: { con: 1 },
         unbuyable: true
     },
-
-    // --- Potions & Buffs ---
     {
-        id: 'potion_red',
-        name: '빨간 물약',
-        type: ITEM_TYPES.POTION,
-        price: 40,
-        image: '/assets/new_redpotion.png', // Working red potion img
-        healAmount: 60
+        id: 'necklace_dex',
+        name: '민첩의 목걸이',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'necklace',
+        price: 30000,
+        image: '/assets/민첩의 목걸이.png',
+        description: 'DEX +1',
+        stats: { ac: 0, dex: 1 },
+        unbuyable: true
     },
     {
-        id: 'potion_green',
-        name: '초록 물약',
-        type: ITEM_TYPES.POTION,
-        price: 1000,
-        image: '/assets/potion_green.png',
-        buffData: { type: 'haste', durationMs: 300000 }
+        id: 'necklace_protection',
+        name: '수호의 목걸이',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'necklace',
+        price: 100000,
+        image: '/assets/수호의 목걸이.png',
+        description: 'AC -3 / 마법 방어력 +5',
+        stats: { ac: 3, mr: 5 },
+        unbuyable: true
+    },
+    {
+        id: 'ring_protection',
+        name: '수호의 반지',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'ring',
+        price: 100000,
+        image: '/assets/수호의 반지.png',
+        description: 'AC -2 / 마법 방어력 +5',
+        stats: { ac: 2, mr: 5 },
+        unbuyable: true
+    },
+    {
+        id: 'ring_guardian',
+        name: '수호자의 반지',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'ring',
+        price: 150000,
+        image: '/assets/수호자의 반지.png',
+        description: '최대 HP +30 / 최대 MP +30',
+        stats: { hp: 30, mp: 30 },
+        unbuyable: true
+    },
+    {
+        id: 'belt_dex',
+        name: '민첩의 벨트',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'belt',
+        price: 20000,
+        image: '/assets/민첩의 벨트.png',
+        description: 'DEX +1',
+        stats: { ac: 0, dex: 1 },
+        unbuyable: true
     },
 
-    // --- Misc ---
+    // --- 정령의 수정 (요정 마법 습득 아이템) ---
+    {
+        id: 'crystal_resist_magic',
+        name: '정령의 수정 (레지스트 매직)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/정령의 수정(레지스트 매직).png',
+        description: '사용 시 레지스트 매직 마법 습득 (요정 Lv.20)',
+        spellId: 'resist_magic',
+        spellName: '레지스트 매직',
+        requiredClass: 'elf',
+        requiredLevel: 20,
+        requiredElement: null
+    },
+    {
+        id: 'crystal_triple_arrow',
+        name: '정령의 수정 (트리플 애로우)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/정령의 수정(트리플 애로우).png',
+        description: '사용 시 트리플 애로우 마법 습득 (요정 Lv.40)',
+        spellId: 'triple_arrow',
+        spellName: '트리플 애로우',
+        requiredClass: 'elf',
+        requiredLevel: 40,
+        requiredElement: null
+    },
+    {
+        id: 'crystal_summon_elemental',
+        name: '정령의 수정 (서먼 레서 엘리멘탈)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/정령의 수정(서먼 레서 엘리멘탈).png',
+        description: '사용 시 서먼 레서 엘리멘탈 마법 습득 (요정 Lv.45)',
+        spellId: 'summon_lesser_elemental',
+        spellName: '서먼 레서 엘리멘탈',
+        requiredClass: 'elf',
+        requiredLevel: 45,
+        requiredElement: null
+    },
+    {
+        id: 'crystal_wind_shot',
+        name: '정령의 수정 (윈드 샷)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/정령의 수정(윈드 샷).png',
+        description: '사용 시 윈드 샷 마법 습득 (바람 계열 요정 Lv.50)',
+        spellId: 'wind_shot',
+        spellName: '윈드 샷',
+        requiredClass: 'elf',
+        requiredLevel: 50,
+        requiredElement: 'wind'
+    },
+    {
+        id: 'crystal_earth_skin',
+        name: '정령의 수정 (어스 스킨)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/정령의 수정(어스 스킨).png',
+        description: '사용 시 어스 스킨 마법 습득 (땅 계열 요정 Lv.50)',
+        spellId: 'earth_skin',
+        spellName: '어스 스킨',
+        requiredClass: 'elf',
+        requiredLevel: 50,
+        requiredElement: 'earth'
+    },
+    {
+        id: 'crystal_fire_weapon',
+        name: '정령의 수정 (파이어 웨폰)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/정령의 수정(파이어 웨폰).png',
+        description: '사용 시 파이어 웨폰 마법 습득 (불 계열 요정 Lv.50)',
+        spellId: 'fire_weapon',
+        spellName: '파이어 웨폰',
+        requiredClass: 'elf',
+        requiredLevel: 50,
+        requiredElement: 'fire'
+    },
+    {
+        id: 'crystal_natures_touch',
+        name: '정령의 수정 (네이쳐스 터치)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/정령의 수정(네이쳐스 터치).png',
+        description: '사용 시 네이쳐스 터치 마법 습득 (물 계열 요정 Lv.50)',
+        spellId: 'natures_touch',
+        spellName: '네이쳐스 터치',
+        requiredClass: 'elf',
+        requiredLevel: 50,
+        requiredElement: 'water'
+    },
+
+    // --- 바포매트 전용 드랍 ---
+    {
+        id: 'robe_baphomet',
+        name: '바포매트의 로브',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 200000,
+        image: '/assets/바포매트의 로브.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -5 / 최대 MP +50 / MP 회복 +5 / 마법사 전용',
+        stats: { ac: 5, mp: 50, mpRegen: 5 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'boots_baphomet',
+        name: '바포매트의 샌달',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'boots',
+        price: 120000,
+        image: '/assets/바포매트의 샌들.png',
+        safe: 6,
+        unbuyable: true,
+        description: 'AC -2 / 최대 MP +50 / MP 회복 +5 / 마법사 전용',
+        stats: { ac: 2, mp: 50, mpRegen: 5 },
+        restrictedClasses: ['knight', 'elf']
+    },
+
+    // --- 신규 마법사 전용 장비 ---
+    {
+        id: 'staff_mana',
+        name: '마나의 지팡이',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 8000,
+        image: '/assets/wizard_staff.png',
+        safe: 6,
+        isStaff: true,
+        unbuyable: true,
+        description: '공격 성공 시 MP +5 / 마법사 전용',
+        stats: { small: 3, large: 3, mpOnHit: 5 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'staff_arcane',
+        name: '마력의 지팡이',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 30000,
+        image: '/assets/마력의 지팡이.png',
+        safe: 6,
+        isStaff: true,
+        unbuyable: true,
+        description: '마법 공격력 +2 / INT +1 / 마법사 전용',
+        stats: { small: 7, large: 7, magicAtkBonus: 2, int: 1 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'staff_crystal',
+        name: '수정 지팡이',
+        type: ITEM_TYPES.WEAPON,
+        slot: 'weapon',
+        price: 15000,
+        image: '/assets/수정 지팡이.png',
+        safe: 6,
+        isStaff: true,
+        description: 'MP 회복 +10 / INT +1 / 마법사 전용',
+        stats: { small: 5, large: 5, mpRegen: 10, int: 1 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'armor_wizard_coat',
+        name: '마법사 옷',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'armor',
+        price: 12000,
+        image: '/assets/마법사 옷.png',
+        safe: 4,
+        description: 'AC -3 / 최대 MP +50 / 마법사 전용',
+        stats: { ac: 3, mp: 50 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'cloak_mana',
+        name: '마나 망토',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'cloak',
+        price: 10000,
+        image: '/assets/마나 망토.png',
+        safe: 4,
+        unbuyable: true,
+        description: 'AC -2 / MP 회복 +5 / 마법사 전용',
+        stats: { ac: 2, mpRegen: 5 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'boots_basic',
+        name: '부츠',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'boots',
+        price: 3000,
+        image: '/assets/부츠.png',
+        safe: 4,
+        description: 'AC -2 / 마법사 전용',
+        stats: { ac: 2 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'boots_crystal',
+        name: '수정 부츠',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'boots',
+        price: 20000,
+        image: '/assets/steel_boots.png',
+        safe: 4,
+        unbuyable: true,
+        description: 'AC -2 / MP 회복 +5 / 마법사 전용',
+        stats: { ac: 2, mpRegen: 5 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'gloves_power',
+        name: '파워 글로브',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'gloves',
+        price: 15000,
+        image: '/assets/파워 글로브.png',
+        safe: 4,
+        unbuyable: true,
+        description: 'AC -2 / STR +1',
+        stats: { ac: 2, str: 1 },
+    },
+    {
+        id: 'tome_arcane',
+        name: '마력서',
+        type: ITEM_TYPES.ARMOR,
+        slot: 'shield',
+        price: 20000,
+        image: '/assets/마력서.png',
+        safe: 4,
+        unbuyable: true,
+        description: 'AC -2 / INT +1 / 마법사 전용',
+        stats: { ac: 2, int: 1 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'belt_soul',
+        name: '영혼의 벨트',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'belt',
+        price: 30000,
+        image: '/assets/영혼의 벨트.png',
+        unbuyable: true,
+        description: 'INT +2 / 마법사 전용',
+        stats: { int: 2 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'belt_mind',
+        name: '정신의 벨트',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'belt',
+        price: 25000,
+        image: '/assets/정신의 벨트.png',
+        unbuyable: true,
+        description: '최대 MP +50 / 마법사 전용',
+        stats: { mp: 50 },
+        restrictedClasses: ['knight', 'elf']
+    },
+    {
+        id: 'belt_mind_shining',
+        name: '빛나는 정신의 벨트',
+        type: ITEM_TYPES.ACCESSORY,
+        slot: 'belt',
+        price: 50000,
+        image: '/assets/빛나는 정신의 벨트.png',
+        unbuyable: true,
+        description: '최대 MP +20 / MP 회복 +5 / 마법사 전용',
+        stats: { mp: 20, mpRegen: 5 },
+        restrictedClasses: ['knight', 'elf']
+    },
+
+    // --- 마력의 돌 (서먼 몬스터 등 소모 재료) ---
+    {
+        id: 'wizard_stone',
+        name: '마력의 돌',
+        type: ITEM_TYPES.POTION,
+        price: 2000,
+        image: '/assets/마력의 돌.png',
+        description: '서먼 몬스터 등 마력을 소모하는 마법 시전 시 1개 소모 (마법사 전용)',
+        requiredClass: 'wizard',
+    },
+
+    // --- 마법서 (마법사 Lv.20+ 마법 습득 아이템) ---
+    {
+        id: 'spellbook_call_lightning',
+        name: '마법서 (콜 라이트닝)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/마법서.png',
+        description: '사용 시 콜 라이트닝 마법 습득 (마법사 Lv.20)',
+        spellId: 'call_lightning',
+        spellName: '콜 라이트닝',
+        requiredClass: 'wizard',
+        requiredLevel: 20,
+        requiredElement: null,
+    },
+    {
+        id: 'spellbook_enchant_mighty',
+        name: '마법서 (인챈트 마이티)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/마법서.png',
+        description: '사용 시 인챈트 마이티 마법 습득 (마법사 Lv.20)',
+        spellId: 'enchant_mighty',
+        spellName: '인챈트 마이티',
+        requiredClass: 'wizard',
+        requiredLevel: 20,
+        requiredElement: null,
+    },
+    {
+        id: 'spellbook_meditation',
+        name: '마법서 (메디테이션)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/마법서.png',
+        description: '사용 시 메디테이션 마법 습득 (마법사 Lv.25)',
+        spellId: 'meditation',
+        spellName: '메디테이션',
+        requiredClass: 'wizard',
+        requiredLevel: 25,
+        requiredElement: null,
+    },
+    {
+        id: 'spellbook_great_heal',
+        name: '마법서 (그레이트 힐)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/고급 마법서.png',
+        description: '사용 시 그레이트 힐 마법 습득 (마법사 Lv.33)',
+        spellId: 'great_heal',
+        spellName: '그레이트 힐',
+        requiredClass: 'wizard',
+        requiredLevel: 33,
+        requiredElement: null,
+    },
+    {
+        id: 'spellbook_eruption',
+        name: '마법서 (이럽션)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/고급 마법서.png',
+        description: '사용 시 이럽션 마법 습득 (마법사 Lv.35)',
+        spellId: 'eruption',
+        spellName: '이럽션',
+        requiredClass: 'wizard',
+        requiredLevel: 35,
+        requiredElement: null,
+    },
+    {
+        id: 'spellbook_berserker',
+        name: '마법서 (버스커스)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/고급 마법서.png',
+        description: '사용 시 버스커스 마법 습득 (마법사 Lv.40)',
+        spellId: 'berserker',
+        spellName: '버스커스',
+        requiredClass: 'wizard',
+        requiredLevel: 40,
+        requiredElement: null,
+    },
+    {
+        id: 'spellbook_summon_monster',
+        name: '마법서 (서먼 몬스터)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/고급 마법서.png',
+        description: '사용 시 서먼 몬스터 마법 습득 (마법사 Lv.45) — 마법사의 돌 소모',
+        spellId: 'summon_monster',
+        spellName: '서먼 몬스터',
+        requiredClass: 'wizard',
+        requiredLevel: 45,
+        requiredElement: null,
+    },
+    {
+        id: 'spellbook_ice_lance',
+        name: '마법서 (아이스 랜스)',
+        type: 'crystal',
+        price: 10000,
+        unbuyable: true,
+        image: '/assets/고급 마법서.png',
+        description: '사용 시 아이스 랜스 마법 습득 (마법사 Lv.50)',
+        spellId: 'ice_lance',
+        spellName: '아이스 랜스',
+        requiredClass: 'wizard',
+        requiredLevel: 50,
+        requiredElement: null,
+    },
 ];

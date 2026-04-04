@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import Tooltip from './Tooltip';
 
 const Shop = () => {
-    const { buyItems, state, selectedItemUid, sellItem, ITEMS } = useGame();
+    const { buyItems, state, sellItem, ITEMS } = useGame();
     const [quantities, setQuantities] = useState({});
     const [activeTab, setActiveTab] = useState('buy'); // 'buy' | 'sell'
 
@@ -19,19 +20,15 @@ const Shop = () => {
         Object.entries(quantities).forEach(([itemId, count]) => {
             if (count > 0) {
                 const item = ITEMS.find(i => i.id === itemId);
-                if (item) {
-                    itemsToBuy.push({ item, count });
-                }
+                if (item) itemsToBuy.push({ item, count });
             }
         });
-
         if (itemsToBuy.length > 0) {
             buyItems(itemsToBuy);
             setQuantities({});
         }
     };
 
-    // Calculate total price for Buy
     const totalPrice = Object.entries(quantities).reduce((sum, [itemId, count]) => {
         const item = ITEMS.find(i => i.id === itemId);
         return sum + (item ? item.price * count : 0);
@@ -42,180 +39,123 @@ const Shop = () => {
             {/* Tabs */}
             <div className="flex border-b border-[#3f3f3f] flex-shrink-0">
                 <button
-                    className={`flex-1 py-3 text-sm font-bold ${activeTab === 'buy' ? 'bg-[#2a2a2a] text-[#d4af37] border-b-2 border-[#d4af37]' : 'text-[#666] hover:bg-[#222]'}`}
+                    className={`flex-1 py-2 text-sm font-bold ${activeTab === 'buy' ? 'bg-[#2a2a2a] text-[#d4af37] border-b-2 border-[#d4af37]' : 'text-[#666] hover:bg-[#222]'}`}
                     onClick={() => setActiveTab('buy')}
-                >
-                    구매 (Buy)
-                </button>
+                >구매 (Buy)</button>
                 <button
-                    className={`flex-1 py-3 text-sm font-bold ${activeTab === 'sell' ? 'bg-[#2a2a2a] text-[#d4af37] border-b-2 border-[#d4af37]' : 'text-[#666] hover:bg-[#222]'}`}
+                    className={`flex-1 py-2 text-sm font-bold ${activeTab === 'sell' ? 'bg-[#2a2a2a] text-[#d4af37] border-b-2 border-[#d4af37]' : 'text-[#666] hover:bg-[#222]'}`}
                     onClick={() => setActiveTab('sell')}
-                >
-                    판매 (Sell)
-                </button>
+                >판매 (Sell)</button>
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-1 md:p-2 pb-20"> {/* Increased bottom padding, added min-h-0 for flex scroll */}
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-1 pb-[72px]">
                 {activeTab === 'buy' ? (
                     <div className="space-y-1">
                         {ITEMS.filter(i => !i.unbuyable).map((item) => (
-                            <div key={item.id} className="flex items-center justify-between bg-black/40 p-1 md:p-1.5 rounded-sm border border-[#3f3f3f] hover:bg-[#2a2a2a] hover:border-[#a59c77] transition-all group">
-                                <div className="flex items-center gap-2 flex-grow min-w-0">
-                                    {/* Item Icon */}
-                                    <div className={`
-                                        w-9 h-9 bg-[#111] border flex items-center justify-center relative flex-shrink-0 overflow-hidden
-                                        ${item.isBlessed ? 'border-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.6)]' : 'border-[#3f3f3f] group-hover:border-[#a59c77]'}
-                                    `}>
+                            <div key={item.id} className="bg-black/40 border border-[#3f3f3f] hover:bg-[#2a2a2a] hover:border-[#a59c77] transition-all group rounded-sm">
+                                {/* Row 1: 아이콘 + 아이템명 + 가격 */}
+                                <div className="flex items-center gap-2 px-1.5 pt-1.5 pb-1">
+                                    <div className={`w-8 h-8 bg-[#111] border flex items-center justify-center flex-shrink-0 overflow-hidden
+                                        ${item.isBlessed ? 'border-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.6)]' : 'border-[#3f3f3f] group-hover:border-[#a59c77]'}`}>
                                         <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                                     </div>
-
-                                    {/* Name & Price */}
-                                    <div className="flex flex-col min-w-0 pr-2">
-                                        <span className={`text-xs font-bold truncate ${item.isBlessed ? 'text-white' : 'text-[#efefef]'}`}>
+                                    <div className="flex-1 min-w-0">
+                                        <div className={`text-[12px] font-bold truncate leading-tight ${item.isBlessed ? 'text-white' : 'text-[#efefef]'}`}>
                                             {item.name}
-                                        </span>
-                                        <span className="text-[#d4af37] font-mono text-[10px]">
+                                        </div>
+                                        <div className="text-[#d4af37] font-mono text-[10px] leading-tight">
                                             {item.price.toLocaleString()} A
-                                        </span>
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Quantity Control: ▼ 0 ~ 99 ▲ */}
-                                <div className="flex items-center gap-1 bg-black/60 rounded-sm border border-[#3f3f3f] px-1 ml-auto">
-                                    <button
-                                        onClick={() => handleQuantityChange(item.id, -1)}
-                                        className="text-[#a59c77] hover:text-white text-[10px] w-5 h-5 flex items-center justify-center active:scale-95 leading-none select-none"
-                                    >
-                                        ▼
-                                    </button>
-                                    <span className="text-[#d4af37] text-xs font-mono w-5 text-center select-none">
+                                {/* Row 2: 수량 조절 */}
+                                <div className="flex items-center gap-0 border-t border-[#2a2a2a] px-1 py-0.5">
+                                    <button onClick={() => handleQuantityChange(item.id, -1)}
+                                        className="text-[#a59c77] hover:text-white text-[10px] w-7 h-6 flex items-center justify-center active:scale-95 select-none">▼</button>
+                                    <span className="text-[#d4af37] text-[11px] font-mono w-6 text-center select-none">
                                         {quantities[item.id] || 0}
                                     </span>
-                                    <button
-                                        onClick={() => handleQuantityChange(item.id, 1)}
-                                        className="text-[#a59c77] hover:text-white text-[10px] w-5 h-5 flex items-center justify-center active:scale-95 leading-none select-none"
-                                    >
-                                        ▲
-                                    </button>
-                                    <button
-                                        onClick={() => handleQuantityChange(item.id, 10)}
-                                        className="text-[#a59c77] hover:text-white text-[9px] w-6 h-5 flex items-center justify-center active:scale-95 leading-none select-none border-l border-[#3f3f3f] ml-1"
-                                        title="+10개"
-                                    >
-                                        +10
-                                    </button>
-                                    <button
-                                        onClick={() => handleQuantityChange(item.id, 100)}
-                                        className="text-[#a59c77] hover:text-white text-[9px] w-8 h-5 flex items-center justify-center active:scale-95 leading-none select-none border-l border-[#3f3f3f] ml-1"
-                                        title="+100개"
-                                    >
-                                        +100
-                                    </button>
+                                    <button onClick={() => handleQuantityChange(item.id, 1)}
+                                        className="text-[#a59c77] hover:text-white text-[10px] w-7 h-6 flex items-center justify-center active:scale-95 select-none">▲</button>
+                                    <div className="flex-1" />
+                                    <button onClick={() => handleQuantityChange(item.id, 10)}
+                                        className="text-[#a59c77] hover:text-white text-[10px] px-2 h-6 flex items-center justify-center active:scale-95 select-none border border-[#3f3f3f] rounded-sm">+10</button>
+                                    <button onClick={() => handleQuantityChange(item.id, 100)}
+                                        className="text-[#a59c77] hover:text-white text-[10px] px-2 h-6 flex items-center justify-center active:scale-95 select-none border border-[#3f3f3f] rounded-sm ml-1">+100</button>
+                                    <button onClick={() => setQuantities(prev => ({ ...prev, [item.id]: 0 }))}
+                                        className="text-[#666] hover:text-red-400 text-[10px] px-2 h-6 flex items-center justify-center active:scale-95 select-none border border-[#3f3f3f] rounded-sm ml-1">✕</button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    // Sell Tab Content (Inventory List)
+                    // Sell Tab
                     <div className="space-y-1">
                         {state.inventory.length === 0 ? (
-                            <div className="text-gray-500 text-center py-10 text-xs">
-                                판매할 아이템이 없습니다.
-                            </div>
+                            <div className="text-gray-500 text-center py-10 text-xs">판매할 아이템이 없습니다.</div>
                         ) : (
                             state.inventory.map((item) => {
                                 const baseSellPrice = Math.floor(item.price / 2);
                                 const sellPrice = item.enchant > 0 ? Math.floor(baseSellPrice * Math.pow(1.5, item.enchant)) : baseSellPrice;
-
-                                // 로컬 상태로 판매 수량 관리
                                 const sellQty = quantities[`sell_${item.uid}`] || 1;
                                 const isStackable = item.count > 1;
 
                                 return (
-                                    <div
-                                        key={item.uid}
-                                        className="flex flex-col bg-black/40 p-1 md:p-1.5 rounded-sm border border-[#3f3f3f] hover:border-[#a59c77] transition-all group"
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 flex-grow min-w-0">
-                                                {/* Item Icon */}
-                                                <div className={`
-                                                    w-9 h-9 bg-[#111] border flex items-center justify-center relative flex-shrink-0 overflow-hidden
-                                                    ${item.isBlessed ? 'border-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.6)]' : 'border-[#3f3f3f] group-hover:border-[#a59c77]'}
-                                                `}>
-                                                    <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
-                                                    {item.enchant > 0 && (
-                                                        <div className="absolute top-0 right-0 w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_4px_#3b82f6] border border-black"></div>
-                                                    )}
-                                                    {item.isEquipped && (
-                                                        <div className="absolute bottom-0 right-0 text-[8px] bg-red-900/80 text-white px-1 border border-red-500 rounded-tl">E</div>
-                                                    )}
-                                                </div>
+                                    <div key={item.uid}
+                                        className="flex items-center gap-1.5 bg-black/40 px-1.5 py-1 border border-[#3f3f3f] hover:border-[#a59c77] transition-all group rounded-sm">
+                                        {/* 아이콘 */}
+                                        <div className={`w-8 h-8 bg-[#111] border flex-shrink-0 flex items-center justify-center relative overflow-hidden
+                                            ${item.isBlessed ? 'border-yellow-400' : 'border-[#3f3f3f] group-hover:border-[#a59c77]'}`}>
+                                            <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                                            {item.enchant > 0 && (
+                                                <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-400 rounded-full border border-black" />
+                                            )}
+                                            {item.isEquipped && (
+                                                <div className="absolute bottom-0 right-0 text-[7px] bg-red-900/80 text-white px-0.5 border border-red-500">E</div>
+                                            )}
+                                        </div>
 
-                                                {/* Name & Sell Price */}
-                                                <div className="flex flex-col min-w-0 flex-shrink pr-1">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className={`text-[11px] md:text-xs font-bold truncate ${item.isBlessed ? 'text-white' : 'text-[#efefef]'}`}>
-                                                            {item.enchant > 0 ? `+${item.enchant} ` : ''}{item.name}
-                                                        </span>
-                                                        {item.count > 1 && <span className="text-gray-400 text-[9px] font-mono">[{item.count}]</span>}
-                                                    </div>
-                                                    <span className="text-[#d4af37] font-mono text-[9px]">
-                                                        {sellPrice.toLocaleString()} A
-                                                    </span>
-                                                </div>
+                                        {/* 이름+가격 */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-baseline gap-1 min-w-0">
+                                                <span className={`text-[12px] font-bold truncate ${item.isBlessed ? 'text-white' : 'text-[#efefef]'}`}>
+                                                    {item.enchant > 0 ? `+${item.enchant} ` : ''}{item.name}
+                                                </span>
+                                                {item.count > 1 && <span className="text-gray-400 text-[9px] font-mono flex-shrink-0">[{item.count}]</span>}
                                             </div>
+                                            <div className="text-[#d4af37] font-mono text-[10px]">{sellPrice.toLocaleString()} A</div>
+                                        </div>
 
-                                            {/* Sell Action */}
-                                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                                                {isStackable && !item.isEquipped && (
-                                                    <div className="flex items-center gap-1 bg-black/60 rounded-sm border border-[#3f3f3f] px-1">
-                                                        <button
-                                                            onClick={() => handleQuantityChange(`sell_${item.uid}`, -1)}
-                                                            className="text-[#a59c77] hover:text-white text-[10px] w-5 h-5 flex items-center justify-center"
-                                                        >▼</button>
-                                                        <span className="text-[#d4af37] text-xs font-mono w-6 text-center">{sellQty}</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                const current = quantities[`sell_${item.uid}`] || 1;
-                                                                if (current < item.count) {
-                                                                    handleQuantityChange(`sell_${item.uid}`, 1);
-                                                                }
-                                                            }}
-                                                            className="text-[#a59c77] hover:text-white text-[10px] w-5 h-5 flex items-center justify-center"
-                                                        >▲</button>
-                                                        <button
-                                                            onClick={() => setQuantities(prev => ({ ...prev, [`sell_${item.uid}`]: item.count }))}
-                                                            className="text-[#a59c77] hover:text-white text-[9px] px-1 border-l border-[#3f3f3f] ml-1"
-                                                        >ALL</button>
-                                                    </div>
-                                                )}
-
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (!item.isEquipped) {
-                                                            sellItem(item.uid, sellQty);
-                                                            // 판매 후 해당 아이템의 수량 상태 초기화
-                                                            setQuantities(prev => {
-                                                                const next = { ...prev };
-                                                                delete next[`sell_${item.uid}`];
-                                                                return next;
-                                                            });
-                                                        }
-                                                    }}
-                                                    disabled={item.isEquipped}
-                                                    className={`
-                                                        px-3 py-1.5 rounded-sm text-[10px] font-bold border flex-shrink-0
-                                                        ${item.isEquipped
-                                                            ? 'border-gray-600 text-gray-600 cursor-not-allowed'
-                                                            : 'border-red-900 bg-red-900/20 text-red-400 hover:bg-red-900 hover:text-white active:scale-95 transition-all'}
-                                                    `}
-                                                >
-                                                    {item.isEquipped ? '장착중' : '판매하기'}
-                                                </button>
-                                            </div>
+                                        {/* 수량 + 판매 */}
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                            {isStackable && !item.isEquipped && (
+                                                <div className="flex items-center bg-black/60 border border-[#3f3f3f] rounded-sm">
+                                                    <button onClick={() => handleQuantityChange(`sell_${item.uid}`, -1)}
+                                                        className="text-[#a59c77] hover:text-white text-[10px] w-5 h-6 flex items-center justify-center">▼</button>
+                                                    <span className="text-[#d4af37] text-[10px] font-mono w-5 text-center">{sellQty}</span>
+                                                    <button onClick={() => { const cur = quantities[`sell_${item.uid}`] || 1; if (cur < item.count) handleQuantityChange(`sell_${item.uid}`, 1); }}
+                                                        className="text-[#a59c77] hover:text-white text-[10px] w-5 h-6 flex items-center justify-center">▲</button>
+                                                    <button onClick={() => setQuantities(prev => ({ ...prev, [`sell_${item.uid}`]: item.count }))}
+                                                        className="text-[#a59c77] hover:text-white text-[9px] px-1 h-6 border-l border-[#3f3f3f] flex items-center">ALL</button>
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!item.isEquipped) {
+                                                        sellItem(item.uid, sellQty);
+                                                        setQuantities(prev => { const next = { ...prev }; delete next[`sell_${item.uid}`]; return next; });
+                                                    }
+                                                }}
+                                                disabled={item.isEquipped}
+                                                className={`h-7 px-2 text-[11px] font-bold border rounded-sm flex-shrink-0 flex items-center
+                                                    ${item.isEquipped
+                                                        ? 'border-gray-600 text-gray-600 cursor-not-allowed'
+                                                        : 'border-red-900 bg-red-900/20 text-red-400 hover:bg-red-900 hover:text-white active:scale-95 transition-all'}`}
+                                            >
+                                                {item.isEquipped ? '장착중' : '판매'}
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -225,15 +165,15 @@ const Shop = () => {
                 )}
             </div>
 
-            {/* Bottom Action Area (Only for Buy Tab now, Sell is instant or per-item) */}
+            {/* 구매 하단 바 */}
             {activeTab === 'buy' && (
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-[#1B1B1B] border-t border-[#3f3f3f] flex items-center justify-between h-[68px]">
-                    <div className="flex flex-col justify-center gap-1 w-[65%]">
-                        <div className="flex justify-between text-[11px] md:text-xs">
+                <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-[#1B1B1B] border-t border-[#3f3f3f] flex items-center justify-between gap-2">
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                        <div className="flex justify-between text-[10px]">
                             <span className="text-[#a59c77]">총 구매 금액</span>
                             <span className="text-[#ff5555] font-mono font-bold">- {totalPrice.toLocaleString()} A</span>
                         </div>
-                        <div className="flex justify-between text-[11px] md:text-xs border-t border-[#333] pt-1">
+                        <div className="flex justify-between text-[10px] border-t border-[#333] pt-0.5">
                             <span className="text-[#888]">남은 아데나</span>
                             <span className={`${state.adena >= totalPrice ? 'text-[#00ff00]' : 'text-red-600'} font-mono`}>
                                 {(state.adena - totalPrice).toLocaleString()} A
@@ -243,12 +183,10 @@ const Shop = () => {
                     <button
                         onClick={handleBuyAll}
                         disabled={totalPrice === 0 || state.adena < totalPrice}
-                        className={`
-                            px-6 py-1.5 rounded-sm text-xs font-bold border h-8 flex items-center
+                        className={`flex-shrink-0 h-9 px-4 text-xs font-bold border rounded-sm
                             ${totalPrice > 0 && state.adena >= totalPrice
-                                ? 'border-[#a59c77] text-[#a59c77] hover:bg-[#a59c77] hover:text-black cursor-pointer'
-                                : 'border-[#444] text-[#444] cursor-not-allowed bg-transparent'}
-                        `}
+                                ? 'border-[#a59c77] text-[#a59c77] hover:bg-[#a59c77] hover:text-black cursor-pointer active:scale-95'
+                                : 'border-[#444] text-[#444] cursor-not-allowed bg-transparent'}`}
                     >
                         구매하기
                     </button>

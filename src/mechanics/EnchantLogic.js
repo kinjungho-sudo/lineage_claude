@@ -102,11 +102,14 @@ export const enchantItem = (item, scrollType, isBlessed = false) => {
                 message: `인챈트 : +${currentEnchant} ${item.name} 에 아무런 일도 일어나지 않았습니다.`,
             };
         } else {
-            // Unsafe failure: 3 Outcomes requested (Success handled above).
-            // Fail outcomes: "Failure" (Nothing happens) vs "Destruction".
-            // Let's say 50/50 for now or slight bias to destruction?
-            // User didn't specify probability, just that there are 3 outcomes.
-            // I'll set 20% chance to just fail (save item), 80% to destroy.
+            // Unsafe failure: blessed scroll prevents destruction
+            if (isBlessed) {
+                return {
+                    result: ENCHANT_RESULTS.FAILURE,
+                    newEnchant: currentEnchant,
+                    message: `인챈트 : +${currentEnchant} ${item.name} 에 아무런 일도 일어나지 않았습니다. (축복의 가호로 파괴를 면했습니다.)`,
+                };
+            }
 
             if (Math.random() < 0.2) {
                 return {

@@ -18,11 +18,12 @@ const CombatLog = () => {
                 {logs.length === 0 && <div className="text-gray-500 italic">전투 기록이 없습니다.</div>}
 
                 {logs.map((log, i) => {
-                    let color = "text-gray-300";
+                    let color = "text-gray-400";
                     if (log.type === 'kill') color = "text-[#d4af37] font-bold";
-                    if (log.type === 'drop') color = "text-[#00ff00] font-bold";
-                    if (log.type === 'damage') color = "text-gray-400";
-                    if (log.type === 'hit') color = "text-red-400"; // Player took damage
+                    if (log.type === 'drop') color = "text-[#4ade80] font-bold";
+                    if (log.type === 'death') color = "text-red-500 font-bold";
+                    if (log.type === 'miss') color = "text-gray-500";
+                    if (log.type === 'spell') color = "text-purple-400";
 
                     return (
                         <div key={i} className={`${color} break-words leading-tight`}>

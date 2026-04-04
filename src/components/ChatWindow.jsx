@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useGame } from '../context/GameContext';
 import { GAME_ACTIONS } from '../context/GameReducer';
+import { soundManager } from '../utils/SoundManager';
 
 const ChatWindow = ({ user }) => {
     const { state, dispatch } = useGame(); // [친구 시스템용 GameContext 연결]
@@ -22,23 +23,23 @@ const ChatWindow = ({ user }) => {
     }, [messages]);
 
     // Connect to Supabase Realtime
-    useEffect(() => {
-        // Prevent duplicate subscription
-        if (channelRef.current) return;
+    const connectChat = () => {
+        if (channelRef.current) {
+            supabase.removeChannel(channelRef.current);
+            channelRef.current = null;
+        }
 
         const channel = supabase.channel('game_global', {
-            config: {
-                broadcast: { self: false },
-            },
+            config: { broadcast: { self: false } },
         });
 
         channel
             .on('broadcast', { event: 'chat' }, (payload) => {
                 const msg = payload.payload;
                 if (msg.isWhisper) {
-                    // 귓속말 수신 대상이 나거나, 내가 보낸 사람일 경우
                     if (msg.targetUser === (user?.nickname || user?.id) || msg.user === (user?.nickname || user?.id)) {
                         setMessages((prev) => [...prev, msg]);
+                        if (msg.targetUser === (user?.nickname || user?.id)) soundManager.playSound('party_join');
                     }
                 } else {
                     setMessages((prev) => [...prev, msg]);
@@ -50,12 +51,12 @@ const ChatWindow = ({ user }) => {
                     const text = `[친구 접속] ${loggedInUser}님이 게임에 입장하셨습니다.`;
                     setMessages((prev) => [...prev, { user: 'System', text, isSystem: true }]);
                     dispatch({ type: GAME_ACTIONS.SET_STATE, payload: { screenMessage: text } });
+                    soundManager.playSound('party_join');
                 }
             })
             .on('broadcast', { event: 'announcement' }, (payload) => {
                 const msg = payload.payload;
                 const isFriend = state.friends?.includes(msg.sender);
-                
                 if (msg.type === 'boss_kill' || isFriend) {
                     setMessages((prev) => [...prev, { ...msg, isSystem: true }]);
                     dispatch({ type: GAME_ACTIONS.SET_STATE, payload: { screenMessage: msg.text } });
@@ -64,23 +65,24 @@ const ChatWindow = ({ user }) => {
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     setIsConnected(true);
-                    setMessages(prev => [...prev, { user: 'System', text: '전체 채팅 채널에 접속했습니다.', isSystem: true }]);
-                    
-                    // 로그인 이벤트 브로드캐스트
+                    setMessages(prev => [...prev, { user: 'System', text: '채팅 서버에 접속했습니다.', isSystem: true }]);
                     channel.send({
                         type: 'broadcast',
                         event: 'login',
                         payload: { user: user?.nickname || user?.id }
                     }).catch(console.error);
-                } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                     setIsConnected(false);
                     console.error('Chat Connection Error:', status);
-                    setMessages(prev => [...prev, { user: 'System', text: `채팅 서버 연결 실패 (${status}) - 새로고침 해주세요.`, isSystem: true }]);
+                    setMessages(prev => [...prev, { user: 'System', text: `채팅 연결 끊김 (${status})`, isSystem: true }]);
                 }
             });
 
         channelRef.current = channel;
+    };
 
+    useEffect(() => {
+        connectChat();
         return () => {
             if (channelRef.current) {
                 supabase.removeChannel(channelRef.current);
@@ -94,7 +96,7 @@ const ChatWindow = ({ user }) => {
     useEffect(() => {
         if (state.pendingAnnouncements && state.pendingAnnouncements.length > 0 && channelRef.current && isConnected) {
             state.pendingAnnouncements.forEach(ann => {
-                const text = ann.text.replace('__USER__', user?.nickname || user?.id || 'Unknown');
+                const text = ann.text.replace('__USER__', state.characterName || user?.nickname || user?.id || 'Unknown');
                 const messageData = {
                     type: ann.type,
                     text: text,
@@ -273,14 +275,25 @@ const ChatWindow = ({ user }) => {
             </div>
 
             {/* Input Area */}
-            <div className="p-1 border-t border-[#444] bg-[#222]">
+            <div className="p-1 border-t border-[#444] bg-[#222] flex gap-1 items-center">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} title={isConnected ? '연결됨' : '연결 끊김'} />
+                {!isConnected && (
+                    <button
+                        onClick={connectChat}
+                        className="text-[#d4af37] text-[10px] font-bold hover:text-white px-1 flex-shrink-0"
+                        title="재연결"
+                    >
+                        재연결
+                    </button>
+                )}
                 <input
                     type="text"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="대화 입력 (Enter)..."
-                    className="w-full bg-[#111] border border-[#555] text-white px-2 py-1 rounded focus:outline-none focus:border-[#777]"
+                    disabled={!isConnected}
+                    placeholder={isConnected ? '대화 입력 (Enter)...' : '연결 중...'}
+                    className="flex-1 bg-[#111] border border-[#555] text-white px-2 py-1 rounded focus:outline-none focus:border-[#777] disabled:opacity-50"
                 />
             </div>
         </div>

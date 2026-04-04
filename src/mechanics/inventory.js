@@ -1,7 +1,8 @@
 import { enchantItem } from './EnchantLogic';
 import { ENCHANT_RESULTS } from '../constants';
-import { soundManager } from '../utils/SoundManager'; // Import SoundManager
-import { calculateStats, getMaxHp } from './combat'; // [Fix] 물약 사용 시 최대 체력 연산에 필요한 모듈 추가
+import { calculateStats, getMaxHp, getMaxMp } from './combat';
+import { ITEMS } from '../data/items';
+import { soundManager } from '../utils/SoundManager'; // [Fix] 물약 사용 시 최대 체력 연산에 필요한 모듈 추가
 
 /**
  * 아이템 구매 로직
@@ -33,6 +34,7 @@ export const handleBuyItems = (state, itemsToBuy) => {
         purchaseLogParts.push(`${item.name} (${count})`);
     });
 
+    soundManager.playSound('item_trade');
     return {
         ...state,
         adena: state.adena - totalPrice,
@@ -53,6 +55,46 @@ export const handleUsePotion = (state, potionUid) => {
     const potion = state.inventory[potionIdx];
     let newInventory = [...state.inventory];
 
+    // 마나 회복 물약 (5분간 초당 MP +5 버프)
+    if (potion.buffData?.type === 'mana_regen') {
+        if (potion.count > 1) {
+            newInventory[potionIdx] = { ...potion, count: potion.count - 1 };
+        } else {
+            newInventory.splice(potionIdx, 1);
+        }
+        const now = Date.now();
+        const newMpRegenEnd = Math.max(state.combatState?.mpRegenPotionEndTime || 0, now) + (potion.buffData.durationMs || 300000);
+        return {
+            ...state,
+            inventory: newInventory,
+            combatState: {
+                ...state.combatState,
+                potionEffect: { timestamp: now, type: 'mana' },
+                mpRegenPotionEndTime: newMpRegenEnd,
+            },
+            logs: [`${potion.name}을 마셨습니다. (5분간 초당 MP +5)`, ...state.logs]
+        };
+    }
+
+    // 파란 물약 (마법 공격력 +3, 5분)
+    if (potion.buffData?.type === 'blue') {
+        const duration = potion.buffData.durationMs || 300000;
+        const now = Date.now();
+        const currentEnd = state.combatState?.bluePotionEndTime || 0;
+        const newEnd = Math.max(now, currentEnd) + duration;
+        if (potion.count > 1) {
+            newInventory[potionIdx] = { ...potion, count: potion.count - 1 };
+        } else {
+            newInventory.splice(potionIdx, 1);
+        }
+        return {
+            ...state,
+            inventory: newInventory,
+            combatState: { ...state.combatState, bluePotionEndTime: newEnd, potionEffect: { timestamp: now, type: 'blue' } },
+            logs: [`${potion.name}을 마셨습니다. (마법 공격력 +${potion.buffData.magicAtkAmount || 3}, 5분)`, ...state.logs]
+        };
+    }
+
     // [New] 버프 아이템 수동 복용 로직 (초록 물약, 용기 물약)
     if (potion.useData?.type === 'haste' || potion.useData?.type === 'brave' || potion.buffData?.type === 'brave') {
         const buffType = potion.useData?.type || potion.buffData?.type;
@@ -61,6 +103,10 @@ export const handleUsePotion = (state, potionUid) => {
         // [Elf Restriction] 요정은 '용기의 물약'은 못 먹지만 '엘븐 와퍼'는 먹을 수 있음
         if (state.characterClass === 'elf' && buffType === 'brave' && potion.id !== 'elven_wafer') {
             return { ...state, logs: [`[시스템] 요정은 용기의 물약을 복용할 수 없습니다.`, ...state.logs] };
+        }
+        // [Wizard Restriction] 마법사는 용기의 물약/엘븐 와퍼 모두 사용 불가
+        if (state.characterClass === 'wizard' && buffType === 'brave') {
+            return { ...state, logs: [`[시스템] 마법사는 이 물약을 사용할 수 없습니다.`, ...state.logs] };
         }
         
         if (potion.count > 1) {
@@ -76,6 +122,7 @@ export const handleUsePotion = (state, potionUid) => {
         const currentEndTime = state.combatState?.[stateKey] || 0;
         const newEndTime = Math.max(now, currentEndTime) + duration;
 
+        soundManager.playSound(buffType === 'haste' ? 'potion_green' : 'potion_brave');
         return {
             ...state,
             inventory: newInventory,
@@ -108,7 +155,7 @@ export const handleUsePotion = (state, potionUid) => {
                 magicHelmStrEndTime: newEndTime,
                 potionEffect: { timestamp: now, type: 'magic_helm' }
             },
-            logs: [`[아이템] ${potion.name} 사용! 1분간 힘(STR)이 3 증가합니다.`, ...state.logs]
+            logs: [`[아이템] ${potion.name} 사용! 1분간 힘(STR)이 5 증가합니다.`, ...state.logs]
         };
     }
 
@@ -137,6 +184,7 @@ export const handleUsePotion = (state, potionUid) => {
             text: `[속보] __USER__님이 ${potion.name}을(를) 읽고 새로운 마법을 깨우쳤습니다!`
         });
 
+        soundManager.playSound('learn_skill');
         return {
             ...state,
             inventory: newInventory,
@@ -203,21 +251,6 @@ export const handleUseScroll = (state, scrollUid, targetUid) => {
         return { ...state, logs: [`[시스템] ${result.message}`, ...state.logs] };
     }
 
-    // Sound Effects
-    if (result.result === ENCHANT_RESULTS.SUCCESS) {
-        soundManager.playSound('enchant_success');
-    } else {
-        soundManager.playSound('enchant_fail');
-    }
-
-    if (result.result === ENCHANT_RESULTS.SUCCESS) {
-        soundManager.playSound('enchant_success');
-    } else if (result.result === ENCHANT_RESULTS.DESTROYED) {
-        soundManager.playSound('enchant_fail');
-    } else {
-        soundManager.playSound('enchant_fail'); // Failure but not destroyed
-    }
-
     let updatedInventory = [...state.inventory];
     let updatedEquipment = { ...state.equipment };
 
@@ -244,6 +277,7 @@ export const handleUseScroll = (state, scrollUid, targetUid) => {
         const targetItem = { ...updatedInventory[targetIndexNew] };
 
         if (result.result === ENCHANT_RESULTS.SUCCESS) {
+            soundManager.playSound('enchant_success');
             targetItem.enchant = result.newEnchant;
             updatedInventory[targetIndexNew] = targetItem;
             // 장착 중이라면 장비창도 업데이트
@@ -254,8 +288,10 @@ export const handleUseScroll = (state, scrollUid, targetUid) => {
             let isAnnounce = false;
             if (targetItem.type === 'weapon' && result.newEnchant >= 8) {
                 isAnnounce = true;
-            } else if (targetItem.type !== 'weapon' && result.newEnchant >= 6) {
-                isAnnounce = true;
+            } else if (targetItem.type !== 'weapon') {
+                // 요정족 방어구(safe: 6)는 +6까지 안전 인챈트이므로 +7부터 속보
+                const safeLimit = targetItem.safe === 6 ? 7 : 6;
+                if (result.newEnchant >= safeLimit) isAnnounce = true;
             }
 
             if (isAnnounce) {
@@ -265,6 +301,7 @@ export const handleUseScroll = (state, scrollUid, targetUid) => {
                 });
             }
         } else if (result.result === ENCHANT_RESULTS.DESTROYED) {
+            soundManager.playSound('enchant_fail');
             updatedInventory = updatedInventory.filter(i => i.uid !== targetUid);
             // 장착 중이었다면 장비 해제
             if (targetItem.isEquipped && targetItem.slot) {
@@ -273,6 +310,9 @@ export const handleUseScroll = (state, scrollUid, targetUid) => {
         }
     }
 
+    if (result.result !== ENCHANT_RESULTS.SUCCESS && result.result !== ENCHANT_RESULTS.DESTROYED) {
+        soundManager.playSound('enchant_fail');
+    }
     return {
         ...state,
         inventory: updatedInventory,
@@ -291,10 +331,27 @@ export const handleUseScroll = (state, scrollUid, targetUid) => {
 export const handleEquipItem = (state, itemToEquip) => {
     if (!itemToEquip.slot) return state;
 
-    // [New] Class Restriction Check
-    if (itemToEquip.restrictedClasses && itemToEquip.restrictedClasses.includes(state.characterClass)) {
-        const className = state.characterClass === 'knight' ? '기사' : (state.characterClass === 'elf' ? '요정' : '마법사');
-        return { ...state, logs: [`[시스템] ${className} 클래스는 이 아이템(${itemToEquip.name})을 착용할 수 없습니다.`, ...state.logs] };
+    // [New] Class Restriction Check — 마스터 데이터 기준으로 체크 (저장 데이터의 구버전 restrictedClasses 무시)
+    const masterItem = ITEMS.find(i => i.id === itemToEquip.id);
+    if (masterItem?.restrictedClasses && masterItem.restrictedClasses.includes(state.characterClass)) {
+        return { ...state, logs: [`이 클래스는 이 장비를 착용 할 수 없습니다.`, ...state.logs] };
+    }
+
+    // [마법사] 장비 제한: 지팡이류 외 무기 착용 불가, 중장갑 착용 불가
+    if (state.characterClass === 'wizard') {
+        if (itemToEquip.type === 'weapon' && !itemToEquip.id.startsWith('staff_')) {
+            return { ...state, logs: [`[마법사] 지팡이류 무기만 착용할 수 있습니다.`, ...state.logs] };
+        }
+        const wizardForbiddenArmors = [
+            'armor_chain', 'armor_bronze_plate', 'armor_plate',
+            'helm_steel', 'armor_steel', 'gloves_steel', 'boots_steel', 'shield_steel',
+            'armor_elf_plate', 'armor_magic_def_chain', 'helm_magic_str',
+            'shield_eva',
+            'helm_kurz', 'armor_kurz', 'gloves_kurz', 'boots_kurz'
+        ];
+        if (wizardForbiddenArmors.includes(itemToEquip.id)) {
+            return { ...state, logs: [`[마법사] 이 방어구는 착용할 수 없습니다.`, ...state.logs] };
+        }
     }
 
     const slot = itemToEquip.slot;
@@ -419,6 +476,7 @@ export const handleSellItem = (state, itemUid, quantity = 1) => {
         newInventory = newInventory.filter(i => i.uid !== itemUid);
     }
 
+    soundManager.playSound('item_trade');
     return {
         ...state,
         inventory: newInventory,
@@ -545,5 +603,85 @@ export const handleWithdrawWarehouse = (state, itemUid, quantity = 1) => {
         warehouse: newWarehouse,
         adena: state.adena - WITHDRAW_FEE,
         logs: [`[창고] ${item.enchant > 0 ? `+${item.enchant} ` : ''}${item.name} (${withdrawCount}개) 출고 비용 100 아데나 지불 완료`, ...state.logs]
+    };
+};
+
+// ── 계정 공유 창고 (sharedWarehouse) ──────────────────────────────────────
+
+export const handleDepositSharedWarehouse = (state, itemUid, quantity = 1) => {
+    const itemIndex = state.inventory.findIndex(i => i.uid === itemUid);
+    if (itemIndex === -1) return state;
+    const item = state.inventory[itemIndex];
+    if (item.isEquipped) {
+        return { ...state, logs: ['[시스템] 장착 중인 아이템은 공유 창고에 맡길 수 없습니다.', ...state.logs] };
+    }
+
+    const depositCount = Math.min(quantity, item.count || 1);
+    let newInventory = [...state.inventory];
+    let newSharedWarehouse = [...(state.sharedWarehouse || [])];
+
+    if (item.count > depositCount) {
+        newInventory[itemIndex] = { ...item, count: item.count - depositCount };
+    } else {
+        newInventory = newInventory.filter(i => i.uid !== itemUid);
+    }
+
+    const isStackable = item.type === 'scroll' || item.type === 'potion';
+    if (isStackable) {
+        const existingIdx = newSharedWarehouse.findIndex(i => i.id === item.id);
+        if (existingIdx >= 0) {
+            newSharedWarehouse[existingIdx] = { ...newSharedWarehouse[existingIdx], count: (newSharedWarehouse[existingIdx].count || 0) + depositCount };
+        } else {
+            newSharedWarehouse.push({ ...item, uid: Date.now() + Math.random(), count: depositCount });
+        }
+    } else {
+        for (let i = 0; i < depositCount; i++) {
+            newSharedWarehouse.push({ ...item, uid: Date.now() + Math.random() + i, count: 1 });
+        }
+    }
+
+    return {
+        ...state,
+        inventory: newInventory,
+        sharedWarehouse: newSharedWarehouse,
+        logs: [`[공유창고] ${item.enchant > 0 ? `+${item.enchant} ` : ''}${item.name} (${depositCount}개) 보관 완료`, ...state.logs]
+    };
+};
+
+export const handleWithdrawSharedWarehouse = (state, itemUid, quantity = 1) => {
+    const sharedWarehouse = state.sharedWarehouse || [];
+    const itemIndex = sharedWarehouse.findIndex(i => i.uid === itemUid);
+    if (itemIndex === -1) return state;
+    const item = sharedWarehouse[itemIndex];
+    const withdrawCount = Math.min(quantity, item.count || 1);
+
+    let newSharedWarehouse = [...sharedWarehouse];
+    let newInventory = [...state.inventory];
+
+    if (item.count > withdrawCount) {
+        newSharedWarehouse[itemIndex] = { ...item, count: item.count - withdrawCount };
+    } else {
+        newSharedWarehouse = newSharedWarehouse.filter(i => i.uid !== itemUid);
+    }
+
+    const isStackable = item.type === 'scroll' || item.type === 'potion';
+    if (isStackable) {
+        const existingIdx = newInventory.findIndex(i => i.id === item.id);
+        if (existingIdx >= 0) {
+            newInventory[existingIdx] = { ...newInventory[existingIdx], count: (newInventory[existingIdx].count || 0) + withdrawCount };
+        } else {
+            newInventory.push({ ...item, uid: Date.now() + Math.random(), count: withdrawCount });
+        }
+    } else {
+        for (let i = 0; i < withdrawCount; i++) {
+            newInventory.push({ ...item, uid: Date.now() + Math.random() + i, count: 1 });
+        }
+    }
+
+    return {
+        ...state,
+        inventory: newInventory,
+        sharedWarehouse: newSharedWarehouse,
+        logs: [`[공유창고] ${item.enchant > 0 ? `+${item.enchant} ` : ''}${item.name} (${withdrawCount}개) 꺼냄`, ...state.logs]
     };
 };

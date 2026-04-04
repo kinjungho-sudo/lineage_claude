@@ -1,0 +1,6 @@
+/**/*.m4a
+  Content-Type: audio/mp4
+/**/*.mp3
+  Content-Type: audio/mpeg
+/**/*.ogg
+  Content-Type: audio/ogg

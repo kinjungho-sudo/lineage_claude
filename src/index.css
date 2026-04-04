@@ -3,10 +3,26 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    overflow: hidden;
+    height: 100%;
+    /* iOS Safari pull-to-refresh / bounce scroll 방지 */
+    overscroll-behavior: none;
+  }
   body {
     @apply bg-black text-gray-200 font-sans;
-    /* Prevent selection for game-like feel */
     user-select: none;
+    overflow: hidden;
+    height: 100%;
+    overscroll-behavior: none;
+    /* iOS Safari 스크롤 바운스 방지 */
+    -webkit-overflow-scrolling: auto;
+    position: fixed;
+    width: 100%;
+  }
+  #root {
+    height: 100%;
+    overflow: hidden;
   }
 }
 

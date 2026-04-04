@@ -61,12 +61,39 @@ const Tooltip = ({ item, children }) => {
     const enchant = item?.enchant || 0;
     const isWeapon = item?.type === 'weapon';
     const isArmor = item && ['armor', 'helm', 'gloves', 'boots', 'shield', 'shirt', 'cloak'].includes(item.type);
+    const isAccessory = item?.type === 'accessory';
+    const STAT_LABELS = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', ac: 'AC', atkBonus: '공격력', hit: '명중률', evasion: '회피율', mrBonus: 'MR', hpBonus: 'HP', mpBonus: 'MP', hpRegenBonus: 'HP 재생', mpRegenBonus: 'MP 재생', mp: '최대 MP', mpRegen: 'MP 회복', mpOnHit: '공격 시 MP', magicAtkBonus: '마법 공격력' };
 
     const getDisplayName = () => {
         if (!item) return '';
         let name = item.name;
         if (enchant > 0) name = `+${enchant} ${name}`;
         return name;
+    };
+
+    // 강화도를 반영한 description 생성
+    const getEnhancedDescription = () => {
+        if (!item?.description) return '';
+        let desc = item.description;
+
+        // 무기: "공격력 XX-YY" → "공격력 (XX+enchant)-(YY+enchant)"
+        if (isWeapon && enchant > 0) {
+            desc = desc.replace(/(\d+)-(\d+)/, (match, min, max) => {
+                const newMin = parseInt(min) + enchant;
+                const newMax = parseInt(max) + enchant;
+                return `${newMin}-${newMax} (+${enchant})`;
+            });
+        }
+
+        // 방어구: "AC -X" → "AC -(X+enchant) (-enchant)"
+        if (isArmor && enchant > 0) {
+            desc = desc.replace(/AC -(\d+)/, (match, ac) => {
+                const totalAc = parseInt(ac) + enchant;
+                return `AC -${totalAc} (-${enchant})`;
+            });
+        }
+
+        return desc;
     };
 
     const tooltipContent = item ? (
@@ -104,12 +131,11 @@ const Tooltip = ({ item, children }) => {
                                 {enchant > 0 && <span className="text-[#4a90e2] ml-1">(+{enchant})</span>}
                             </span>
                         </div>
-                        {item.stats.str > 0 && (
-                            <div className="flex justify-between gap-2">
-                                <span className="text-[#aaa]">STR</span>
-                                <span className="font-mono text-[#d4af37]">+{item.stats.str}</span>
-                            </div>
-                        )}
+                        {item.stats.int > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">INT</span><span className="font-mono text-[#d4af37]">+{item.stats.int}</span></div>}
+                        {item.stats.str > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">STR</span><span className="font-mono text-[#d4af37]">+{item.stats.str}</span></div>}
+                        {item.stats.magicAtkBonus > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">마법 공격력</span><span className="font-mono text-[#d4af37]">+{item.stats.magicAtkBonus}</span></div>}
+                        {item.stats.mpRegen > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">MP 회복</span><span className="font-mono text-[#4a90e2]">+{item.stats.mpRegen}</span></div>}
+                        {item.stats.mpOnHit > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">공격 시 MP</span><span className="font-mono text-[#4a90e2]">+{item.stats.mpOnHit}</span></div>}
                         {item.stats.option && (
                             <div className="text-[#a59c77] text-[11px]">{item.stats.option}</div>
                         )}
@@ -122,16 +148,15 @@ const Tooltip = ({ item, children }) => {
                         <div className="flex justify-between gap-2">
                             <span className="text-[#aaa]">방어력(AC)</span>
                             <span className="font-mono text-[#ddd]">
-                                {item.stats.ac - enchant}
-                                {enchant > 0 && <span className="text-[#4a90e2] ml-1">({-enchant})</span>}
+                                -{item.stats.ac + enchant}
+                                {enchant > 0 && <span className="text-[#4a90e2] ml-1">(-{enchant})</span>}
                             </span>
                         </div>
-                        {item.stats.str > 0 && (
-                            <div className="flex justify-between gap-2">
-                                <span className="text-[#aaa]">STR</span>
-                                <span className="font-mono text-[#d4af37]">+{item.stats.str}</span>
-                            </div>
-                        )}
+                        {item.stats.str > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">STR</span><span className="font-mono text-[#d4af37]">+{item.stats.str}</span></div>}
+                        {item.stats.int > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">INT</span><span className="font-mono text-[#d4af37]">+{item.stats.int}</span></div>}
+                        {item.stats.mr > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">MR</span><span className="font-mono text-[#d4af37]">+{item.stats.mr}</span></div>}
+                        {item.stats.mp > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">최대 MP</span><span className="font-mono text-[#4a90e2]">+{item.stats.mp}</span></div>}
+                        {item.stats.mpRegen > 0 && <div className="flex justify-between gap-2"><span className="text-[#aaa]">MP 회복</span><span className="font-mono text-[#4a90e2]">+{item.stats.mpRegen}</span></div>}
                         {item.stats.set && (
                             <div className="text-[#a59c77] text-[11px] mt-0.5">[세트] {item.stats.set === 'steel' ? '강철 세트' : item.stats.set}</div>
                         )}
@@ -141,18 +166,26 @@ const Tooltip = ({ item, children }) => {
                     </>
                 )}
 
+                {/* Accessory Stats */}
+                {isAccessory && item.stats && Object.entries(item.stats).filter(([k, v]) => v !== 0 && STAT_LABELS[k]).map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-2">
+                        <span className="text-[#aaa]">{STAT_LABELS[k]}</span>
+                        <span className="font-mono text-[#d4af37]">{v > 0 ? `+${v}` : v}</span>
+                    </div>
+                ))}
+
                 {/* Potion/Scroll Stats */}
-                {item.heal > 0 && (
+                {(item.healAmount > 0 || item.heal > 0) && (
                     <div className="flex justify-between gap-2">
                         <span className="text-[#aaa]">회복량</span>
-                        <span className="font-mono text-[#e74c3c]">{item.heal} HP</span>
+                        <span className="font-mono text-[#e74c3c]">{item.healAmount || item.heal} HP</span>
                     </div>
                 )}
 
                 {/* Description */}
-                {item.description && (
+                {getEnhancedDescription() && (
                     <div className="mt-2 text-[#888] pt-1 border-t border-[#333] italic">
-                        {item.description}
+                        {getEnhancedDescription()}
                     </div>
                 )}
             </div>

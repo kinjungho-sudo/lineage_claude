@@ -8,9 +8,11 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=lineageclassic"
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=lineageclaude",
+    "deploy:prod": "npm run build && npx wrangler deploy"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@supabase/supabase-js": "^2.95.3",
     "lucide-react": "^0.564.0",
     "react": "^19.2.0",

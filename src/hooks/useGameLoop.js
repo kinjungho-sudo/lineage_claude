@@ -1,35 +1,63 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { GAME_ACTIONS } from '../context/GameReducer';
 
 /**
  * 게임 루프 훅 (Game Loop)
- * 일정 간격(Tick)으로 자동 사냥 및 게임 로직을 실행합니다.
- * @param {Function} dispatch 
- * @param {Object} user 
- * @param {Object} state - 추가: 용기 물약 상태 확인용
+ * Web Worker 기반 타이머 — 탭 비활성화 시에도 정확하게 동작합니다.
+ *
+ * 공격속도 기준 (도핑 없음: 기사=요정 동일)
+ *  - 기본              : 1500ms
+ *  - 용기의 물약 (기사) : 1000ms  (+50%)
+ *  - 엘븐 와퍼  (요정) : 1154ms  (+30%)
+ *  - 초록 물약  (헤이스트): 위 값에 추가 ×1/1.6 가속
  */
 export const useGameLoop = (dispatch, user, state) => {
+    const workerRef = useRef(null);
+
     useEffect(() => {
         if (!user) return;
 
-        // 버프 효과 활성화 여부 확인
         const now = Date.now();
-        const hasGreen = state?.combatState?.hasteEndTime && now < state.combatState.hasteEndTime;
+        const hasHaste = state?.combatState?.hasteEndTime && now < state.combatState.hasteEndTime;
         const hasBrave = state?.combatState?.bravePotionEndTime && now < state.combatState.bravePotionEndTime;
+        const isElf = state?.characterClass === 'elf';
 
-        // 속도 단계별 Tick Interval 계산
-        // 1. 기본 상태: 1120ms (현재 대비 60% 느림)
-        // 2. 초록 물약(Haste): 700ms
-        // 3. 용충(Brave + Haste): 437ms
-        let tickInterval = 1120;
-        if (hasGreen) {
-            tickInterval = hasBrave ? 437 : 700;
+        let tickInterval = 1500;
+
+        if (hasBrave) {
+            tickInterval = isElf
+                ? Math.round(1500 / 1.3)
+                : Math.round(1500 / 1.5);
         }
 
-        const timer = setInterval(() => {
-            dispatch({ type: GAME_ACTIONS.AUTO_HUNT_TICK });
-        }, tickInterval);
+        if (hasHaste) {
+            tickInterval = Math.round(tickInterval / 1.6);
+        }
 
-        return () => clearInterval(timer);
-    }, [user, state?.combatState?.hasteEndTime, state?.combatState?.bravePotionEndTime]); // 버프 시간이 변하면 훅 재실행
+        // 이전 워커 종료
+        if (workerRef.current) {
+            workerRef.current.postMessage({ type: 'stop' });
+            workerRef.current.terminate();
+        }
+
+        const worker = new Worker('/timerWorker.js');
+        workerRef.current = worker;
+
+        worker.onmessage = () => {
+            dispatch({ type: GAME_ACTIONS.AUTO_HUNT_TICK });
+        };
+
+        worker.postMessage({ type: 'start', interval: tickInterval });
+
+        return () => {
+            worker.postMessage({ type: 'stop' });
+            worker.terminate();
+            workerRef.current = null;
+        };
+    }, [
+        user,
+        state?.characterClass,
+        state?.combatState?.hasteEndTime,
+        state?.combatState?.bravePotionEndTime,
+    ]);
 };
