@@ -740,7 +740,7 @@ function _handleMonsterKill(state, monster, _lastDamage, currentExp, currentAden
     let newExp = currentExp + rewardExp, newLevel = state.level, newMaxExp = getRequiredExp(newLevel), newHp = state.hp, levelUpEffect = null;
     let announces = state.pendingAnnouncements ? [...state.pendingAnnouncements] : [];
 
-    while (newExp >= newMaxExp && newLevel < 80) {
+    while (newExp >= newMaxExp && newLevel < 100) {
         newLevel++; newExp -= newMaxExp; newMaxExp = getRequiredExp(newLevel);
         const curStats = calculateStats(state);
         newHp = getMaxHp({ ...state, level: newLevel }, curStats);
