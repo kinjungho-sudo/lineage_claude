@@ -424,6 +424,10 @@ export const processAutoHuntTick = (state) => {
                         : defaultSpell.type === 'wizard_eruption' ? 'eruption'
                         : 'bolt';
                     playerDamage = Math.floor(magicDmg * 2.0);
+                    // 몬스터 마법 방어력(MR) 적용: 최소 10% 피해 보장
+                    const monsterMr = targetMonsterData.mr || 0;
+                    const mrReduction = 1 - Math.max(0.1, monsterMr / 100);
+                    playerDamage = Math.max(1, Math.floor(playerDamage * mrReduction));
                     currentMp = Math.max(0, currentMp - defaultSpell.mpCost);
                 } else if (defaultSpell && currentMp < defaultSpell.mpCost) {
                     // MP 부족 → 일반 물리 공격만 (largeAtk/smallAtk 유지, 마법 없음)
@@ -434,6 +438,10 @@ export const processAutoHuntTick = (state) => {
                     magicImpactType = 'bolt';
                     const freeMagicDmg = Math.floor(stats.int * 0.4 + stats.wis * 0.2) + stats.weaponEnchant + bonusEnchant + Math.floor(state.level / 8) + (stats.magicAtkBonus || 0);
                     playerDamage = Math.floor(freeMagicDmg * 2.0);
+                    // 몬스터 마법 방어력(MR) 적용: 최소 10% 피해 보장
+                    const monsterMr = targetMonsterData.mr || 0;
+                    const mrReduction = 1 - Math.max(0.1, monsterMr / 100);
+                    playerDamage = Math.max(1, Math.floor(playerDamage * mrReduction));
                 }
             } else {
                 playerDamage += (Math.floor(stats.str / 3) + stats.weaponEnchant + bonusEnchant + Math.floor(state.level / 10));
