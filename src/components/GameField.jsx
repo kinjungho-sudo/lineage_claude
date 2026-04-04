@@ -1856,14 +1856,14 @@ const GameField = () => {
                                 : 1; // 초기 0.4초 동안 빠르게 확장
                             const dist = r * 0.15 + expandForce * maxDist;
 
-                            // 위로 솟구치는 힘 (더 높이, 더 극적)
-                            const peakHeight = drawH * 1.2; // 상승 높이 증가
-                            const gravityEffect = Math.max(0, 1 - (eProgress - 0.15) * 0.9);
-                            const upwardForce = eProgress < 0.25
-                                ? eProgress / 0.25
-                                : Math.max(0, 1 - (eProgress - 0.25) * 0.85);
+                            // 위로 솟구치는 힘 (지면에서 발사, 천천히 떨어짐)
+                            const peakHeight = drawH * 1.4; // 상승 높이 증가
+                            const gravityEffect = Math.max(0, 1 - (eProgress - 0.4) * 1.2); // 0.4초부터 중력 시작
+                            const upwardForce = eProgress < 0.35
+                                ? eProgress / 0.35
+                                : Math.max(0, 1 - (eProgress - 0.35) * 0.8); // 더 오래 올라있음
                             const upwardMotion = upwardForce * peakHeight * (1 + (Math.random() - 0.5) * 0.4);
-                            const fallDistance = Math.max(0, (eProgress - 0.25) * 200 * gravityEffect);
+                            const fallDistance = Math.max(0, (eProgress - 0.4) * 150 * gravityEffect); // 0.4초부터 떨어지기 시작
 
                             const px = cx + Math.cos(a) * dist;
                             const py = (monsterY + drawH - 10) - upwardMotion + fallDistance;

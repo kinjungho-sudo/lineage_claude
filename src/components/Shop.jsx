@@ -53,7 +53,8 @@ const Shop = () => {
                 {activeTab === 'buy' ? (
                     <div className="space-y-1">
                         {ITEMS.filter(i => !i.unbuyable).map((item) => (
-                            <div key={item.id} className="bg-black/40 border border-[#3f3f3f] hover:bg-[#2a2a2a] hover:border-[#a59c77] transition-all group rounded-sm">
+                            <Tooltip key={item.id} item={item}>
+                                <div className="bg-black/40 border border-[#3f3f3f] hover:bg-[#2a2a2a] hover:border-[#a59c77] transition-all group rounded-sm cursor-help">
                                 {/* Row 1: 아이콘 + 아이템명 + 가격 */}
                                 <div className="flex items-center gap-2 px-1.5 pt-1.5 pb-1">
                                     <div className={`w-8 h-8 bg-[#111] border flex items-center justify-center flex-shrink-0 overflow-hidden
@@ -87,6 +88,7 @@ const Shop = () => {
                                         className="text-[#666] hover:text-red-400 text-[10px] px-2 h-6 flex items-center justify-center active:scale-95 select-none border border-[#3f3f3f] rounded-sm ml-1">✕</button>
                                 </div>
                             </div>
+                            </Tooltip>
                         ))}
                     </div>
                 ) : (
@@ -102,8 +104,8 @@ const Shop = () => {
                                 const isStackable = item.count > 1;
 
                                 return (
-                                    <div key={item.uid}
-                                        className="flex items-center gap-1.5 bg-black/40 px-1.5 py-1 border border-[#3f3f3f] hover:border-[#a59c77] transition-all group rounded-sm">
+                                    <Tooltip key={item.uid} item={item}>
+                                        <div className="flex items-center gap-1.5 bg-black/40 px-1.5 py-1 border border-[#3f3f3f] hover:border-[#a59c77] transition-all group rounded-sm cursor-help">
                                         {/* 아이콘 */}
                                         <div className={`w-8 h-8 bg-[#111] border flex-shrink-0 flex items-center justify-center relative overflow-hidden
                                             ${item.isBlessed ? 'border-yellow-400' : 'border-[#3f3f3f] group-hover:border-[#a59c77]'}`}>
@@ -158,6 +160,7 @@ const Shop = () => {
                                             </button>
                                         </div>
                                     </div>
+                                    </Tooltip>
                                 );
                             })
                         )}
