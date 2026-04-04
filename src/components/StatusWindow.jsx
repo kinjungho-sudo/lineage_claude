@@ -50,8 +50,10 @@ const StatusWindow = () => {
         (state.allocatedCon || 0) + (state.allocatedInt || 0) + (state.allocatedWis || 0);
     const availablePoints = Math.max(0, state.level - 50) - totalAllocated;
 
-    const mpRegen = 5 + Math.max(0, (totalWis - 12) * 1);
-    const mr = 10 + Math.floor(totalWis / 2) + Math.floor(totalInt / 2) + (stats.mrBonus || 0);
+    // MP 재생: WIS 기반 (모든 클래스) + 레벨 기반 + 장비 보너스
+    const mpRegen = 5 + Math.max(0, Math.floor(state.level / 12) + (totalWis - 12)) + (stats.mpRegenBonus || 0);
+    // MR: WIS 기반 (마법 저항력) + 장비 보너스 / INT는 마법 공격력에만 사용
+    const mr = 10 + Math.floor(totalWis / 2) + (stats.mrBonus || 0);
     const maxHp = getMaxHp(state, stats);
     const maxMp = getMaxMp(state, stats);
     const isElf = state.characterClass === 'elf';

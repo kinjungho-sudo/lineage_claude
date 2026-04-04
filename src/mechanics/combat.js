@@ -32,10 +32,13 @@ export const getMaxHp = (state, stats) => {
 };
 
 export const getMaxMp = (state, stats) => {
-    const wizardMpBonus = state.characterClass === 'wizard'
-        ? Math.floor((stats?.int || 0) * 3 + (stats?.wis || 0) * 2)
+    // WIS: 모든 클래스에 적용 (MP 회복 능력)
+    const wisBonus = Math.floor((stats?.wis || 0) * 2);
+    // INT: 마법사만 추가 MP 보너스 (마법 공격력 관련)
+    const wizardIntBonus = state.characterClass === 'wizard'
+        ? Math.floor((stats?.int || 0) * 3)
         : 0;
-    return 30 + (state.level * 5) + (stats.maxMpBonus || 0) + wizardMpBonus;
+    return 30 + (state.level * 5) + (stats.maxMpBonus || 0) + wisBonus + wizardIntBonus;
 };
 
 export const getRequiredExp = (level) => {
@@ -587,7 +590,7 @@ export const processAutoHuntTick = (state) => {
             return { ...state, hp: Math.min(maxHp, currentHp), mp: Math.min(maxMp, currentMp), inventory: currentInventory, logs: combatSystemLogs, combatLogs, lastRegenTime: (now - lastRegenTime > CONFIG.REGEN_INTERVAL_MS) ? now : lastRegenTime, combatState: { ...state.combatState, isAttacking: false, monsterHpPercent: 0, targetMonsterId: targetMonsterData.id, damageNumbers, isDying: true, deathTimestamp: now, hasteEndTime, bravePotionEndTime, bluePotionEndTime, mpRegenPotionEndTime, magicHelmStrEndTime: newMagicHelmEndTime, kurzAttackCount: newKurzAttackCount, impact: playerDamage > 0 ? { type: isMagicAttack && magicImpactType ? magicImpactType : 'kill', timestamp: now } : null, wizardSpellEffect: isMagicAttack && magicImpactType ? { type: magicImpactType, timestamp: now } : state.combatState?.wizardSpellEffect, partnerOnSameMap, lastAttackDamage: playerDamage, lastAttackIsMagic: isMagicAttack } };
         }
 
-        const minAttackInterval = state.characterClass === 'wizard' ? 1000 : 700; // 마법사는 최소 1초 이상 딜레이
+        const minAttackInterval = state.characterClass === 'wizard' ? 1500 : 700; // 마법사는 최소 1.5초 이상 딜레이
         const attackIntervalMs = Math.max(minAttackInterval, _computeAttackIntervalMs(hasteEndTime, bravePotionEndTime, state.characterClass === 'elf', now) - (stats.accuracySpeedBonus || 0) * 25);
         return { ...state, hp: Math.min(maxHp, currentHp), mp: Math.min(maxMp, currentMp), inventory: currentInventory, logs: combatSystemLogs, combatLogs: combatLogs.slice(-50), lastRegenTime: (now - lastRegenTime > CONFIG.REGEN_INTERVAL_MS) ? now : lastRegenTime, combatState: { ...state.combatState, isAttacking: true, lastAttackTimestamp: now, attackIntervalMs, targetMonsterId: targetMonsterData.id, monsterHpPercent: newMonsterHpPercent, damageNumbers, potionEffect: (hasteLog || bravePotionLog || bluePotionLog || mpRegenLog || isPotionUsed) ? { timestamp: now, type: hasteLog ? 'haste' : (bravePotionLog ? 'brave' : (bluePotionLog ? 'blue' : (mpRegenLog ? 'mana' : (isPotionUsed || 'potion')))) } : state.combatState.potionEffect, impact: playerDamage > 0 ? { type: isMagicAttack && magicImpactType ? magicImpactType : 'hit', timestamp: now } : null, wizardSpellEffect: isMagicAttack && magicImpactType ? { type: magicImpactType, timestamp: now } : state.combatState?.wizardSpellEffect, playerImpact: isSpellCast ? { type: 'magic', element: activeSpellElement, timestamp: now } : null, baphometSpellToggle: newBaphometSpellToggle, baphometSpellIndex: newBaphometSpellIndex, kurzAttackCount: newKurzAttackCount, aoeSpellHit, hasteEndTime, bravePotionEndTime, bluePotionEndTime, mpRegenPotionEndTime, magicHelmStrEndTime: newMagicHelmEndTime, lastAttackDamage: playerDamage, lastAttackIsMagic: isMagicAttack } };
     } catch (e) {
