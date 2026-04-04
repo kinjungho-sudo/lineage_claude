@@ -390,7 +390,11 @@ export const processAutoHuntTick = (state) => {
                 bonusEnchant = Math.floor(Math.random() * (41 + (stats.weaponEnchant - 7) * 15));
             }
             if (state.characterClass === 'elf') {
-                playerDamage += (stats.dex * 0.2 + stats.weaponEnchant + bonusEnchant + Math.floor(state.level / 12));
+                // 트리플 애로우: 기본 공격력 × 3
+                const isTripleArrowActive = state.combatState?.tripleArrowEffect && Date.now() - state.combatState.tripleArrowEffect.timestamp < 600;
+                const damageMultiplier = isTripleArrowActive ? 3 : 1;
+                playerDamage = playerDamage * damageMultiplier;
+                playerDamage += (stats.dex * 0.2 + stats.weaponEnchant + bonusEnchant + Math.floor(state.level / 12)) * damageMultiplier;
             } else if (state.characterClass === 'wizard') {
                 const defaultSpellId = state.wizardDefaultSpell;
                 const defaultSpell = defaultSpellId ? WIZARD_SPELLS.find(s => s.id === defaultSpellId) : null;
