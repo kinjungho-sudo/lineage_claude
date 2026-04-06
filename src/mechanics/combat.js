@@ -702,7 +702,7 @@ function _handleMonsterKill(state, monster, _lastDamage, currentExp, currentAden
     const partnerAdena = partnerOnSameMap ? (rawAdena - rewardAdena) : 0;
 
     const dropRateMult = partnerOnSameMap ? 1.5 : 1.0;
-    const finalChance = (monster.id === 'kurz' || monster.id === 'baphomet') ? 1.0 : Math.min(0.95, dropChance * diffWeight * 1.43 * dropRateMult);
+    const finalChance = (monster.id === 'kurz' || monster.id === 'baphomet') ? 1.0 : Math.min(0.95, dropChance * diffWeight * 1.0 * dropRateMult);
 
     let partnerLootItem = null;
     let partnerLootCount = 0;
