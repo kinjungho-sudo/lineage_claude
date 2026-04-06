@@ -742,7 +742,7 @@ function _handleMonsterKill(state, monster, _lastDamage, currentExp, currentAden
 
     while (newExp >= newMaxExp && newLevel < 100) {
         newLevel++; newExp -= newMaxExp; newMaxExp = getRequiredExp(newLevel);
-        const curStats = calculateStats(state);
+        const curStats = calculateStats({ ...state, level: newLevel });
         newHp = getMaxHp({ ...state, level: newLevel }, curStats);
         currentMp = getMaxMp({ ...state, level: newLevel }, curStats);
         systemLogs.unshift(`[축하] 레벨 ${newLevel} 달성!`);
