@@ -1560,7 +1560,7 @@ const GameField = () => {
                 if (showSpark) {
                     const hitElapsed = Date.now() - impact.timestamp;
                     const isMagicSpell = ['bolt', 'fire', 'lightning', 'eruption'].includes(impact.type);
-                    const hitDur = impact.type === 'fire' ? 700 : impact.type === 'lightning' ? 600 : isMagicSpell ? 400 : 180;
+                    const hitDur = impact.type === 'fire' ? 700 : impact.type === 'lightning' ? 600 : impact.type === 'eruption' ? 800 : isMagicSpell ? 400 : 180;
                     const hitAlpha = Math.max(0, 1 - hitElapsed / hitDur);
                     const cx = monsterX + drawW / 2;
                     const cy = monsterY + drawH / 2;
@@ -1797,170 +1797,144 @@ const GameField = () => {
                         }
                         ctx.shadowBlur = 0;
                     } else if (impact.type === 'eruption') {
-                        // 이럽션: 강력한 지면 폭발 애니메이션 (리니지 스타일)
+                        // 이럽션: 지진 파동이 앞으로 나아가며 바위가 아래에서 솟구치는 효과
                         const eProgress = hitElapsed / hitDur;
+                        const groundY = monsterY + drawH - 5;
+                        const waveWidth = 270;           // 파동이 지나가는 총 가로 너비
+                        const waveStartX = cx - 210;     // 파동 시작 X (캐릭터 쪽)
 
-                        // === 1. 강력한 지면 크랙 애니메이션 ===
-                        if (eProgress < 0.2) {
-                            const crackPhase = eProgress / 0.2; // 0 ~ 1
-                            ctx.globalAlpha = hitAlpha * (1 - crackPhase) * 0.8;
-
-                            // 여러 방향의 갈라짐
-                            for (let dir = 0; dir < 4; dir++) {
-                                const angle = (dir / 4) * Math.PI * 2;
-                                ctx.strokeStyle = '#6B5344';
-                                ctx.lineWidth = 3 + crackPhase * 2;
-                                ctx.lineCap = 'round';
-
-                                // 중심에서 밖으로 뻗어나가는 크랙
-                                ctx.beginPath();
-                                ctx.moveTo(cx, monsterY + drawH - 5);
-                                for (let seg = 0; seg < 3; seg++) {
-                                    const dist = (seg / 2) * 100 * crackPhase;
-                                    const offsetAngle = angle + (Math.random() - 0.5) * 0.3;
-                                    const x = cx + Math.cos(offsetAngle) * dist;
-                                    const y = monsterY + drawH - 5 - dist * 0.3;
-                                    ctx.lineTo(x, y);
-                                }
-                                ctx.stroke();
-                            }
-
-                            // 지면 흔들림 효과 (물결무늬)
-                            ctx.globalAlpha = hitAlpha * (1 - crackPhase) * 0.4;
-                            ctx.strokeStyle = '#8B7355';
-                            ctx.lineWidth = 1;
-                            for (let wave = 0; wave < 3; wave++) {
-                                ctx.beginPath();
-                                for (let x = -80; x <= 80; x += 10) {
-                                    const y = (monsterY + drawH - 5) + Math.sin((x + eProgress * 200) / 30) * (5 - wave * 2);
-                                    if (x === -80) ctx.moveTo(cx + x, y);
-                                    else ctx.lineTo(cx + x, y);
-                                }
-                                ctx.stroke();
-                            }
-                        }
-
-                        // === 2. 거대한 바위들 폭발적으로 솟구침 ===
-                        ctx.globalAlpha = hitAlpha;
-                        const rockCount = 8; // 더 많은 바위
-
-                        for (let i = 0; i < rockCount; i++) {
-                            const baseAngle = (i / rockCount) * Math.PI * 2;
-                            const angleVariation = (Math.random() - 0.5) * 0.6;
-                            const a = baseAngle + angleVariation;
-
-                            // 더 멀리, 더 빠르게 퍼짐
-                            const maxDist = 160; // 120 -> 160
-                            const expandForce = eProgress < 0.4
-                                ? eProgress / 0.4
-                                : 1; // 초기 0.4초 동안 빠르게 확장
-                            const dist = r * 0.15 + expandForce * maxDist;
-
-                            // 위로 솟구치는 힘 (지면에서 발사, 천천히 떨어짐)
-                            const peakHeight = drawH * 1.4; // 상승 높이 증가
-                            const gravityEffect = Math.max(0, 1 - (eProgress - 0.4) * 1.2); // 0.4초부터 중력 시작
-                            const upwardForce = eProgress < 0.35
-                                ? eProgress / 0.35
-                                : Math.max(0, 1 - (eProgress - 0.35) * 0.8); // 더 오래 올라있음
-                            const upwardMotion = upwardForce * peakHeight * (1 + (Math.random() - 0.5) * 0.4);
-                            const fallDistance = Math.max(0, (eProgress - 0.4) * 150 * gravityEffect); // 0.4초부터 떨어지기 시작
-
-                            const px = cx + Math.cos(a) * dist;
-                            const py = (monsterY + drawH - 10) - upwardMotion + fallDistance;
-
-                            // 거대한 바위 크기 (12~30 -> 18~50)
-                            const baseSize = 18 + (Math.random() - 0.5) * 10;
-                            const rockSize = baseSize + eProgress * 32;
-                            const rockAlpha = eProgress < 0.3
-                                ? eProgress / 0.3
-                                : Math.max(0, 1 - (eProgress - 0.3) / 0.7);
-
-                            // 큰 바위는 회색, 작은 바위는 용암색 섞음
-                            const isLavaRock = Math.random() > 0.6;
-                            const pg = ctx.createRadialGradient(px - 6, py - 6, 0, px + 6, py + 6, rockSize);
-
-                            if (isLavaRock) {
-                                // 용암 바위: 밝은 주황색
-                                pg.addColorStop(0, '#ffaa44');
-                                pg.addColorStop(0.6, '#ff6600');
-                                pg.addColorStop(1, '#990000');
-                            } else {
-                                // 일반 바위: 회색
-                                pg.addColorStop(0, '#bbbbbb');
-                                pg.addColorStop(0.5, '#666666');
-                                pg.addColorStop(1, '#222222');
-                            }
-
-                            ctx.globalAlpha = hitAlpha * rockAlpha * 0.95;
-                            ctx.fillStyle = pg;
+                        // === 1. 앞으로 이동하는 지면 균열선 ===
+                        const crackFrontX = waveStartX + Math.min(1, eProgress * 2.2) * waveWidth;
+                        const crackLines = [
+                            { offsetY: 0,  color: '#ff4400', width: 3 },
+                            { offsetY: -5, color: '#6B4423', width: 2 },
+                            { offsetY: 4,  color: '#5A3A1A', width: 1.5 },
+                        ];
+                        ctx.save();
+                        for (const cl of crackLines) {
+                            ctx.globalAlpha = hitAlpha * Math.max(0, 1 - eProgress * 1.4) * 0.9;
+                            ctx.strokeStyle = cl.color;
+                            ctx.lineWidth = cl.width;
+                            ctx.lineCap = 'round';
                             ctx.beginPath();
-                            ctx.arc(px, py, rockSize, 0, Math.PI * 2);
-                            ctx.fill();
-
-                            // 바위 그림자/테두리 (강력한 느낌)
-                            ctx.globalAlpha = hitAlpha * rockAlpha * 0.6;
-                            ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                            ctx.shadowBlur = 8;
-                            ctx.strokeStyle = isLavaRock ? '#660000' : '#000000';
-                            ctx.lineWidth = 3;
+                            ctx.moveTo(waveStartX, groundY + cl.offsetY);
+                            for (let wx = waveStartX; wx <= crackFrontX; wx += 12) {
+                                const wobble = Math.sin(wx * 0.25) * 5 + Math.cos(wx * 0.4) * 3;
+                                ctx.lineTo(wx, groundY + cl.offsetY + wobble);
+                            }
                             ctx.stroke();
-                            ctx.shadowBlur = 0;
+                        }
+                        ctx.restore();
+
+                        // === 2. 순차적으로 솟구치는 바위 열 (앞으로 나아가는 파동) ===
+                        // 시드 기반 오프셋 테이블 (랜덤 깜빡임 방지)
+                        const _rkOffsets = [
+                            [-8, 18, 58], [12, 22, 68], [-15, 16, 52], [10, 20, 72],
+                            [-5, 24, 62], [8, 19, 47], [-12, 21, 60], [15, 17, 54],
+                            [-10, 23, 65], [6, 18, 50], [-18, 22, 70], [11, 20, 58],
+                        ];
+                        const NUM_COLS = 6;
+                        for (let col = 0; col < NUM_COLS; col++) {
+                            const colDelay = (col / NUM_COLS) * 0.48;
+                            const colLife  = Math.max(0, Math.min(1, (eProgress - colDelay) / 0.58));
+                            if (colLife <= 0) continue;
+
+                            const colCenterX = waveStartX + (col / (NUM_COLS - 1)) * waveWidth;
+                            const rocksPerCol = col % 2 === 0 ? 2 : 3;
+
+                            for (let rk = 0; rk < rocksPerCol; rk++) {
+                                const idx = (col * 3 + rk) % _rkOffsets.length;
+                                const [xOff, rockBaseSize, maxRiseH] = _rkOffsets[idx];
+
+                                // 솟구치고 내려오는 포물선 궤적
+                                const risePhase = colLife < 0.45
+                                    ? colLife / 0.45
+                                    : 1 - (colLife - 0.45) / 0.55;
+                                const rockX = colCenterX + xOff;
+                                const rockY = groundY - risePhase * maxRiseH;
+
+                                const rockAlpha = colLife < 0.1
+                                    ? colLife / 0.1
+                                    : Math.max(0, 1 - (colLife - 0.65) / 0.35);
+
+                                const isLavaRock = (col + rk) % 3 !== 0;
+                                const pg = ctx.createRadialGradient(rockX - 4, rockY - 5, 0, rockX, rockY, rockBaseSize);
+                                if (isLavaRock) {
+                                    pg.addColorStop(0, '#ffcc55');
+                                    pg.addColorStop(0.45, '#ff5500');
+                                    pg.addColorStop(1,   '#7a1200');
+                                } else {
+                                    pg.addColorStop(0, '#cccccc');
+                                    pg.addColorStop(0.5,'#666666');
+                                    pg.addColorStop(1,  '#222222');
+                                }
+
+                                ctx.save();
+                                ctx.globalAlpha = hitAlpha * rockAlpha;
+                                ctx.fillStyle = pg;
+                                ctx.shadowColor = 'rgba(0,0,0,0.7)';
+                                ctx.shadowBlur = 6;
+                                ctx.beginPath();
+                                ctx.arc(rockX, rockY, rockBaseSize, 0, Math.PI * 2);
+                                ctx.fill();
+                                ctx.shadowBlur = 0;
+                                ctx.strokeStyle = isLavaRock ? '#550000' : '#111111';
+                                ctx.lineWidth = 2;
+                                ctx.stroke();
+                                ctx.restore();
+
+                                // 솟구치는 순간 흙먼지
+                                if (colLife < 0.35) {
+                                    const dustT = colLife / 0.35;
+                                    ctx.save();
+                                    ctx.globalAlpha = hitAlpha * (1 - dustT) * 0.65;
+                                    ctx.fillStyle = '#9B7A55';
+                                    for (let d = 0; d < 4; d++) {
+                                        const da = (d / 4) * Math.PI * 2;
+                                        const dd = dustT * 28;
+                                        ctx.beginPath();
+                                        ctx.arc(rockX + Math.cos(da) * dd, groundY - 4 + Math.sin(da) * dd * 0.4, 7 + d * 2, 0, Math.PI * 2);
+                                        ctx.fill();
+                                    }
+                                    ctx.restore();
+                                }
+                            }
                         }
 
-                        // === 3. 강렬한 먼지/흙 폭발 구름 ===
-                        if (eProgress > 0.1 && eProgress < 0.85) {
-                            // 메인 먼지 구름 (갈색)
-                            ctx.globalAlpha = hitAlpha * Math.max(0, 1 - eProgress * 1.2) * 0.5;
-                            ctx.fillStyle = '#8B7355';
-                            const dustPhase = Math.min(1, eProgress / 0.3); // 처음 0.3초 동안 최대
-
-                            for (let i = 0; i < 6; i++) {
-                                const angle = (i / 6) * Math.PI * 2;
-                                const dustDist = 50 + dustPhase * 120;
-                                const dustSpread = 40 + eProgress * 80;
-
-                                const dustX = cx + Math.cos(angle) * dustDist;
-                                const dustY = (monsterY + drawH - 20) - dustPhase * 100 - eProgress * 60;
-                                const dustSize = 20 + Math.random() * 35;
-
-                                ctx.beginPath();
-                                ctx.arc(dustX, dustY, dustSize, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-
-                            // 밝은 황색 흙입자들 (더 극적)
-                            ctx.globalAlpha = hitAlpha * Math.max(0, 1 - eProgress * 1.3) * 0.4;
-                            ctx.fillStyle = '#FFD700';
-                            for (let i = 0; i < 10; i++) {
-                                const angle = Math.random() * Math.PI * 2;
-                                const distance = Math.random() * 150;
-                                const px = cx + Math.cos(angle) * distance;
-                                const py = (monsterY + drawH - 15) - Math.random() * 100 - eProgress * 50;
-                                const size = 3 + Math.random() * 8;
-
-                                ctx.beginPath();
-                                ctx.arc(px, py, size, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                        }
-
-                        // === 4. 중앙 충격파 빛 효과 ===
-                        if (eProgress < 0.3) {
-                            ctx.globalAlpha = hitAlpha * (1 - eProgress / 0.3) * 0.6;
-                            ctx.globalCompositeOperation = 'lighter';
-
-                            const shockWaveRadius = eProgress / 0.3 * 150;
-                            const shockGrad = ctx.createRadialGradient(cx, monsterY + drawH - 10, 0, cx, monsterY + drawH - 10, shockWaveRadius);
-                            shockGrad.addColorStop(0, '#ffaa00');
-                            shockGrad.addColorStop(0.5, '#ff6600');
-                            shockGrad.addColorStop(1, 'rgba(255,100,0,0)');
-
-                            ctx.fillStyle = shockGrad;
+                        // === 3. 지진파 타원 충격파 (앞으로 이동) ===
+                        for (let w = 0; w < 3; w++) {
+                            const wDelay = w * 0.12;
+                            const wP = Math.max(0, Math.min(1, (eProgress - wDelay) / 0.6));
+                            if (wP <= 0 || wP >= 1) continue;
+                            const wCenterX = waveStartX + wP * waveWidth;
+                            const wRadH = 20 + wP * 15;
+                            ctx.save();
+                            ctx.globalAlpha = hitAlpha * (1 - wP) * 0.5;
+                            ctx.strokeStyle = '#AA6633';
+                            ctx.lineWidth = 2;
                             ctx.beginPath();
-                            ctx.arc(cx, monsterY + drawH - 10, shockWaveRadius, 0, Math.PI * 2);
-                            ctx.fill();
+                            ctx.ellipse(wCenterX, groundY, wRadH * 1.6, wRadH * 0.35, 0, 0, Math.PI * 2);
+                            ctx.stroke();
+                            ctx.restore();
+                        }
 
+                        // === 4. 초기 충격 섬광 (처음 20%) ===
+                        if (eProgress < 0.2) {
+                            const sP = eProgress / 0.2;
+                            ctx.save();
+                            ctx.globalAlpha = hitAlpha * (1 - sP) * 0.75;
+                            ctx.globalCompositeOperation = 'lighter';
+                            const sR = sP * 110;
+                            const sg = ctx.createRadialGradient(cx, groundY, 0, cx, groundY, sR);
+                            sg.addColorStop(0, '#ffbb33');
+                            sg.addColorStop(0.4, '#ff4400');
+                            sg.addColorStop(1,  'rgba(200,50,0,0)');
+                            ctx.fillStyle = sg;
+                            ctx.beginPath();
+                            ctx.arc(cx, groundY, sR, 0, Math.PI * 2);
+                            ctx.fill();
                             ctx.globalCompositeOperation = 'source-over';
+                            ctx.restore();
                         }
                     } else {
                         // 기본 스파크 4줄
